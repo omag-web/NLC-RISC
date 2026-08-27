@@ -144,6 +144,14 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 #projector-screen{max-width:100%;padding:2.5rem 3rem;gap:1.6rem;background:var(--bg);}
 .proj-title{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.2rem);font-weight:900;color:#fff;letter-spacing:.04em;}
 .proj-q{font-family:var(--disp);font-size:clamp(1.05rem,2.1vw,1.6rem);font-weight:700;color:var(--cyan);letter-spacing:.03em;margin-bottom:.5rem;}
+.proj-input-badge{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.95rem);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:.5rem 1.1rem;margin-bottom:1.1rem;animation:pulse 2s ease-in-out infinite;}
+.proj-wait-row{display:flex;align-items:center;gap:2.5rem;margin-top:1.5rem;flex-wrap:wrap;}
+.proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
+.proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
+.proj-presenter{font-family:var(--body);}
+.proj-presenter .name{font-family:var(--disp);font-size:clamp(1.1rem,2.2vw,1.6rem);font-weight:700;color:#fff;letter-spacing:.02em;}
+.proj-presenter .title{font-size:clamp(.85rem,1.6vw,1.1rem);color:var(--text2);margin-top:.3rem;}
+.proj-presenter .scan-note{font-family:var(--mono);font-size:clamp(.65rem,1.2vw,.85rem);color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;margin-top:1rem;}
 .proj-bar-wrap{margin-bottom:1.3rem;}
 .proj-bar-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:clamp(.7rem,1.5vw,1rem);color:var(--text2);margin-bottom:.5rem;}
 .proj-bar-pct{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.4rem);font-weight:900;}
@@ -269,7 +277,10 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <div style="display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;" class="green-c">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>VOTE TRANSMITTED
     </div>
-    <div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);">Stand by for results on the main screen.</div>
+  </div>
+  <div id="seg-live-wrap" style="display:none;flex-direction:column;width:100%;gap:.4rem;">
+    <div class="slabel" style="margin-bottom:0;">LIVE RESULTS</div>
+    <div id="seg-live-bars"></div>
   </div>
   <div style="display:flex;flex-wrap:wrap;gap:.65rem;width:100%;" id="sc-actions">
     <button class="btn btn-p" id="btn-reveal" disabled>Reveal Consequences</button>
@@ -466,7 +477,9 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
    RUN OF SHOW — edit content/order here
    ══════════════════════════════════════════════════════════════ */
 const DECK = [
-{id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI','for Public Organizations'],notes:'Cold open. Welcome, housekeeping, then straight to QR code.'},
+{id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI','for Public Organizations'],
+ showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',
+ notes:'This is the waiting screen — sits on the projector until you click Next. Welcome, housekeeping, then advance to the pulse check.'},
 
 {id:'pulse-open',type:'poll',min:1,label:'Opening Pulse Check',setup:'Before we start —',q:'How are you feeling about AI right now?',
  opts:[{id:'A',txt:'😬 Mostly concerned',g:{inno:-3,priv:3,acc:1,human:2}},{id:'B',txt:'🤔 Interested, but cautious',g:{inno:1,priv:1,acc:1,human:1}},{id:'C',txt:'👍 Already using it',g:{inno:3,priv:-1,acc:0,human:-1}},{id:'D',txt:'🚀 Give me all the AI',g:{inno:5,priv:-3,acc:-2,human:-3}}],
@@ -510,13 +523,13 @@ const DECK = [
   {id:'C',txt:'REJECT IT',out:'The answer wasn\'t fabricated — it\'s real text from Section 4. The actual problem is subtler: a revised Section 8 elsewhere says 72 hours. AI should have flagged the conflict between the two, not silently picked one.'},
  ],notes:'The problem wasn\'t AI — it was the authority we gave it to pick a single answer instead of surfacing the conflict. AI can organize, summarize, compare, surface patterns. Humans still judge, approve, interpret, decide.'},
 
-{id:'riscville',type:'slide',min:1,kicker:'SIMULATION MODE (skip if short on time)',title:'Welcome to the City of Riscville',
+{id:'riscville',type:'slide',min:1,kicker:'SIMULATION MODE',title:'Welcome to the City of Riscville',
  columns:[{h:'POPULATION',d:'24,600'},{h:'EMPLOYEES',d:'187'},{h:'AI POLICY',d:'None (yet)'},{h:'AI ENTHUSIASM',d:'Questionable'}],
- notes:'Light flavor beat — you now run Riscville for the governance section.'},
+ notes:'Light flavor beat — you now run Riscville for the governance section. SKIP THIS SLIDE if you\'re running long; nothing downstream depends on it.'},
 
-{id:'tc1',type:'traffic',min:2,label:'AI Traffic Control 1/4 (cut 1-2 of these if short on time)',item:'Communications wants to use AI to rewrite a publicly available council agenda into plain language for residents.',correct:0,
+{id:'tc1',type:'traffic',min:2,label:'AI Traffic Control 1/4',item:'Communications wants to use AI to rewrite a publicly available council agenda into plain language for residents.',correct:0,
  opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
- notes:'Recommended: GREEN. Why: public info, low consequence, easy human review, clear benefit. Low-risk use doesn\'t need high-friction governance.'},
+ notes:'Recommended: GREEN. Why: public info, low consequence, easy human review, clear benefit. Low-risk use doesn\'t need high-friction governance. CUT 1-2 of the 4 traffic control rounds if you\'re running long — they\'re independent of each other.'},
 
 {id:'tc2',type:'traffic',min:2,label:'AI Traffic Control 2/4',item:'HR wants AI to create five interview questions using the publicly posted job description.',correct:0,
  opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
@@ -789,6 +802,7 @@ function refreshAllLiveUI(){
   if($('fac-live-bars') && $('facilitator').classList.contains('active') && seg.opts) renderLiveBars('fac-live-bars',S.idx);
   if($('fac-gauge-mini') && $('facilitator').classList.contains('active')) renderGaugesInto('fac-gauge-mini',true);
   if($('projector-screen').classList.contains('active')) renderProjector();
+  if($('segment').classList.contains('active') && S.sel && seg.opts) renderLiveBars('seg-live-bars',S.idx);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -844,15 +858,17 @@ function loadSegment(idx){
   });
   $('cons-wrap').style.display='none';
   $('voted-confirm').style.display='none';
+  $('seg-live-wrap').style.display='none';
   // action buttons vary by type
   const hasConsequence = seg.type==='scenario';
   $('btn-reveal').style.display = hasConsequence?'inline-flex':'none';
   $('btn-reveal').disabled=true;
   $('btn-reset').style.display='inline-flex';
-  if(!hasConsequence){
-    // for traffic/poll/policy: auto "done" flow after vote, no reveal button needed
+  if(S.sel){
+    markSel(S.sel); $('btn-reveal').disabled=false;
+    $('voted-confirm').style.display='flex';
+    if(seg.opts){ $('seg-live-wrap').style.display='flex'; renderLiveBars('seg-live-bars',idx); }
   }
-  if(S.sel){ markSel(S.sel); $('btn-reveal').disabled=false; $('voted-confirm').style.display= hasConsequence? 'none':'flex'; }
 }
 function markSel(id){ qa('.opt-btn').forEach(b=>b.classList.toggle('sel',b.dataset.id===id)); }
 
@@ -861,12 +877,13 @@ function selOpt(id){
   S.sel=id; save(); markSel(id);
   qa('.opt-btn').forEach(b=>b.disabled=true);
   toast('VOTE TRANSMITTED');
+  $('voted-confirm').style.display='flex';
   const seg=DECK[S.idx];
   let gauge=null;
   if(seg.type==='scenario'){ const opt=seg.opts.find(o=>o.id===id); gauge=scenarioGaugeDelta(opt); $('btn-reveal').disabled=false; }
-  else if(seg.type==='traffic'){ const pickIdx=seg.opts.findIndex(o=>o.id===id); gauge=trafficGaugeDelta(pickIdx,seg.correct); $('voted-confirm').style.display='flex'; }
-  else if(seg.type==='poll'){ const opt=seg.opts.find(o=>o.id===id); gauge=opt.g||null; $('voted-confirm').style.display='flex'; }
-  else if(seg.type==='policy'){ $('voted-confirm').style.display='flex'; }
+  else if(seg.type==='traffic'){ const pickIdx=seg.opts.findIndex(o=>o.id===id); gauge=trafficGaugeDelta(pickIdx,seg.correct); }
+  else if(seg.type==='poll'){ const opt=seg.opts.find(o=>o.id===id); gauge=opt.g||null; }
+  if(seg.opts){ $('seg-live-wrap').style.display='flex'; renderLiveBars('seg-live-bars',S.idx); }
   publishVote(seg.id,id,gauge);
 }
 
@@ -1012,10 +1029,20 @@ function renderProjector(){
     if(seg.columns){ html+=`<div class="slide-cols">${seg.columns.map(c=>`<div class="slide-col"><h3>${esc(c.h)}</h3><p>${esc(c.d)}</p></div>`).join('')}</div>`; }
     if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
     if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
+    if(seg.showQR){
+      html+=`<div class="proj-wait-row">
+        <div class="proj-wait-qr"><img src="images/AI-Interactive-QR.png" alt="Scan to join"/></div>
+        <div class="proj-presenter">
+          ${seg.presenter?`<div class="name">${esc(seg.presenter)}</div>`:''}
+          ${seg.presenterTitle?`<div class="title">${esc(seg.presenterTitle)}</div>`:''}
+          <div class="scan-note">Scan to join on your phone</div>
+        </div>
+      </div>`;
+    }
     body.innerHTML=html; body.style.justifyContent='flex-start';
   } else if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy'){
     body.style.justifyContent='center';
-    body.innerHTML=`<div class="proj-q">${esc(seg.q||seg.item||'')}</div><div id="proj-bars-inner"></div>`;
+    body.innerHTML=`<div class="proj-input-badge">📱 Grab your phone — vote now</div><div class="proj-q">${esc(seg.q||seg.item||'')}</div><div id="proj-bars-inner"></div>`;
     renderLiveBars('proj-bars-inner',S.idx,true);
   } else if(seg.type==='policy-reveal'){
     body.style.justifyContent='center';
