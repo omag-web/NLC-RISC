@@ -789,9 +789,7 @@ function onSegmentChanged(){
   const seg=DECK[S.idx];
   if(!seg) return;
   if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy'){
-    if($('segment').classList.contains('active') || $('watch').classList.contains('active') || $('landing').classList.contains('active')===false){
-      loadSegment(S.idx); showScreen('segment');
-    }
+    loadSegment(S.idx); showScreen('segment');
   } else {
     $('watch-note').textContent = seg.title ? ('Coming up: '+seg.title) : 'Stand by.';
     showScreen('watch');
