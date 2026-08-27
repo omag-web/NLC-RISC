@@ -486,19 +486,22 @@ const DECK = [
  notes:'"We\'ll ask this again before you leave." Don\'t dwell — quick tap, move on.'},
 
 {id:'adoption-stat',type:'slide',min:2,kicker:'WHY THIS MATTERS NOW',title:'Interest Is Moving Faster Than Governance',
+ bullets:['Employees are already experimenting with AI tools on their own, whether or not there\'s a policy for it.'],
  columns:[{h:'96%',d:'of mayors are interested in using AI'},{h:'9%',d:'of local governments have a formal internal AI policy'},{h:'38%',d:'say their org isn\'t prepared to use AI safely'}],
  notes:'Let the contrast breathe for a second before moving on.'},
 
 {id:'wrong-question',type:'slide',min:1,kicker:'REFRAME',title:'"Should We Allow AI?" Is the Wrong Question',
- bullets:['The better question: "How should we use it?"','AI is already entering our organizations — through employees, vendors, software, and public expectations.'],
+ bullets:['The better question: "How should we use it?"','AI is already entering our organizations — through employees, vendors, software, and public expectations.','A ban doesn\'t stop that. It just pushes it out of sight, into personal accounts and unapproved tools.'],
  callout:'Ban it. Anything goes. Or: responsible use.',notes:'Two road signs colliding into a third path — say it, don\'t need to show it.'},
 
 {id:'platform-model',type:'slide',min:2,kicker:'FIRST, LET\'S CLEAR SOMETHING UP',title:'Platform vs. Model — Think of It Like a Vehicle',
+ bullets:['"We use ChatGPT" or "we use Claude" doesn\'t actually tell you much — the platform is just the vehicle.'],
  columns:[{h:'PLATFORM',d:'The vehicle — ChatGPT, Claude, Gemini, Copilot'},{h:'MODEL',d:'The engine — GPT, Claude Sonnet/Opus, Gemini models'},{h:'TOOLS',d:'What the vehicle can access or do'},{h:'DATA',d:'What you\'re putting inside it'}],
  callout:'Two people can "use the same AI" while actually using very different systems.',
  notes:'The app is not the intelligence itself. This is the model-vs-platform literacy moment.'},
 
 {id:'model-choices',type:'slide',min:1,kicker:'MODELS ARE NOT INTERCHANGEABLE',title:'⚡ Fast · 🧠 Balanced · 🔬 Deep',
+ bullets:['Every platform now offers more than one model — picking the right one is part of using AI responsibly.'],
  columns:[{h:'⚡ FAST',d:'Routine tasks, high volume, quick answers, lower cost'},{h:'🧠 BALANCED',d:'Strong reasoning, everyday professional work'},{h:'🔬 DEEP',d:'Complex reasoning, large problems, higher cost'}],
  callout:'The best model is the one appropriate for the task.',notes:'Sets up the Pick The AI vote next.'},
 
@@ -507,11 +510,12 @@ const DECK = [
  notes:'Reveal verbally: probably FAST or BALANCED. Takeaway: more powerful isn\'t automatically more appropriate.'},
 
 {id:'sl-edges',type:'slide',min:2,kicker:'AI HAS EDGES',title:'Data · Accuracy · Decision · Accountability',
+ bullets:['Four questions worth asking before any AI-assisted work leaves your desk.'],
  columns:[{h:'DATA',d:'What did you give it?'},{h:'ACCURACY',d:'Is the output true?'},{h:'DECISION',d:'What authority did you give it?'},{h:'ACCOUNTABILITY',d:'Who owns the result?'}],
  notes:'Transition from capability to governance.'},
 
 {id:'confidence-accuracy',type:'slide',min:2,kicker:'A CRITICAL DISTINCTION',title:'AI Confidence ≠ AI Accuracy',
- bullets:['It can be spectacularly helpful — and spectacularly wrong — with exactly the same confidence.'],
+ bullets:['It can be spectacularly helpful — and spectacularly wrong — with exactly the same confidence.','A polished, well-formatted answer is not the same thing as a correct one.'],
  callout:'The interface doesn\'t look nervous when it\'s guessing.',notes:'Sets up Trust It or Check It.'},
 
 {id:'trust-check',type:'scenario',min:3,label:'Trust It or Check It?',
@@ -524,6 +528,7 @@ const DECK = [
  ],notes:'The problem wasn\'t AI — it was the authority we gave it to pick a single answer instead of surfacing the conflict. AI can organize, summarize, compare, surface patterns. Humans still judge, approve, interpret, decide.'},
 
 {id:'riscville',type:'slide',min:1,kicker:'SIMULATION MODE',title:'Welcome to the City of Riscville',
+ bullets:['A fictional city, so nobody has to use real organizational data for what comes next.'],
  columns:[{h:'POPULATION',d:'24,600'},{h:'EMPLOYEES',d:'187'},{h:'AI POLICY',d:'None (yet)'},{h:'AI ENTHUSIASM',d:'Questionable'}],
  notes:'Light flavor beat — you now run Riscville for the governance section. SKIP THIS SLIDE if you\'re running long; nothing downstream depends on it.'},
 
@@ -556,20 +561,20 @@ const DECK = [
  notes:'This is your guardrail-not-roadblock moment. Don\'t reveal the reframe option\'s superiority until after the vote.'},
 
 {id:'gov-framework',type:'slide',min:3,kicker:'GOVERN WITHOUT BANNING',title:'Green · Yellow · Red',
- bullets:['🟢 GREEN — normal work: brainstorming, drafting, formatting, public info, general research','🟡 YELLOW — slow down: internal docs, data analysis, HR work, claims/incident info, legal research','🔴 RED — stop or reframe: credentials, unauthorized sensitive info, autonomous high-impact decisions'],
+ bullets:['🟢 GREEN — normal work: brainstorming, drafting, formatting, public info, general research. Use it like any other tool.','🟡 YELLOW — slow down: internal docs, data analysis, HR work, claims/incident info, legal research. Needs an approved tool and a human check before it goes anywhere.','🔴 RED — stop or reframe: credentials, unauthorized sensitive info, autonomous high-impact decisions. If you\'re here, change the task, not just the tool.'],
  callout:'A guardrail says "use AI here, under these conditions" — not "don\'t."',
  notes:'Don\'t start with a 14-page policy. Start with organizational decisions.'},
 
 {id:'six-questions',type:'slide',min:1,kicker:'BEFORE YOU WRITE THE POLICY',title:'Six Questions Your Organization Must Answer',
- bullets:['Which tools are approved?','What data can be used?','What requires human review?','What uses are prohibited?','Who remains accountable?','How are new tools evaluated?'],
+ bullets:['Which tools are approved?','What data can be used, and what can\'t?','What requires human review before it goes out?','What uses are prohibited outright?','Who remains accountable when AI is involved?','How are new tools evaluated before they\'re approved?'],
  callout:'A policy document can\'t answer questions your organization has never discussed.',notes:'Read these fast — they set up the policy-builder vote coming up.'},
 
 {id:'four-question-guardrail',type:'slide',min:1,kicker:'BEFORE YOU HIT SUBMIT',title:'The Four-Question Guardrail',
- bullets:['DATA — what am I giving it?','DECISION — what am I asking it to do?','ENVIRONMENT — where is the information going?','DOUBLE-CHECK — what must a human verify?'],
+ bullets:['DATA — what am I giving it? (Would I be comfortable if this leaked?)','DECISION — what am I asking it to do? (Assist, or actually decide?)','ENVIRONMENT — where is the information going? (Approved tool, or a personal account?)','DOUBLE-CHECK — what must a human verify before this goes out?'],
  callout:'If employees remember nothing else, remember these four questions.',notes:'This is the single most portable takeaway of the whole session.'},
 
 {id:'mission1-intro',type:'slide',min:1,kicker:'YOUR FIRST AI MISSION',title:'A City Manager Just Handed You a Problem',
- bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you write the prompt'],notes:'Transition into the Press Release mission.'},
+ bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you write the prompt, and everyone votes on what happens next'],notes:'Transition into the Press Release mission.'},
 
 {id:'m-press',type:'scenario',min:6,label:'Mission 1 · The Press Release',
  setup:'A department head asks your communications team to let AI write a press release about a new city infrastructure grant. They send over a one-paragraph summary and tell you to make it a full release. The department head says they will approve it with a quick read.',
@@ -588,7 +593,7 @@ const DECK = [
  notes:'Quick gut-check poll, no reveal needed — the split itself is the discussion.'},
 
 {id:'sl-model',type:'slide',min:1,kicker:'CHOOSING THE RIGHT MODEL, LIVE',title:'⚡ Fast vs. 🧠 Deep — Under Time Pressure',
- bullets:['Same principle as Claude Sonnet vs. Claude Opus','Choosing a model is part of choosing a level of risk'],notes:'Segue into the Water Main Break mission.'},
+ bullets:['Same principle as Claude Sonnet vs. Claude Opus','Choosing a model is part of choosing a level of risk','Watch for which option in the next mission is genuinely fast, and which one just feels fast'],notes:'Segue into the Water Main Break mission.'},
 
 {id:'m-water',type:'scenario',min:6,label:'Mission 2 · The Water Main Break',
  setup:'A major water main has broken in a residential neighborhood. Repairs will take 6 to 8 hours. Residents have no water. Your team has one person on duty and is being flooded with calls. Leadership wants something out in the next 10 minutes.',
@@ -607,7 +612,7 @@ const DECK = [
  notes:'Quick gut-check, move straight into policy building.'},
 
 {id:'sl-policy',type:'slide',min:1,kicker:'BUILD IT TOGETHER',title:'Let\'s Build YOUR AI Policy',
- bullets:['Your answers to the next four questions become the room\'s principles','No right answers — just decisions'],notes:'Set up the 4 policy questions.'},
+ bullets:['Your answers to the next four questions become the room\'s principles','No right answers — just decisions','Reasonable organizations land in different places on these, and that\'s fine'],notes:'Set up the 4 policy questions.'},
 
 {id:'pq1',type:'policy',min:1,label:'Policy Question 1/4',q:'Should employees be limited to approved AI platforms?',
  opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}]},
@@ -627,7 +632,7 @@ const DECK = [
  notes:'Compare live results to the opening pulse check out loud — that shift IS the closing argument.'},
 
 {id:'closing',type:'slide',min:1,kicker:'CLOSING',title:'Know the Tool. Know the Edges. Build the Guardrails.',
- bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment'],
+ bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment','None of this requires you to be an AI expert — it requires you to be clear about where the line is'],
  callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',
  notes:'End here. Point to resources / QR for the session hub. Thank the room.'},
 ];
