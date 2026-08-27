@@ -1107,11 +1107,13 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const urlParams=new URLSearchParams(window.location.search);
   if(urlParams.get('projector')==='true'){ showProjector(); }
-  else{ showScreen('landing'); }
+  else{ onSegmentChanged(); }
 
   const SECRET='mission'; let typed='';
   document.addEventListener('keydown',e=>{
-    if(!$('landing').classList.contains('active')){ typed=''; return; }
+    const tag=document.activeElement && document.activeElement.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA'){ typed=''; return; } // don't fire while someone's typing a prompt
+    if(IS_FACILITATOR || IS_PROJECTOR){ return; } // already in the right mode
     if(e.key.length!==1){ typed=''; return; }
     typed=(typed+e.key.toLowerCase()).slice(-SECRET.length);
     if(typed===SECRET){ typed=''; IS_FACILITATOR=true; renderFacilitator(); showScreen('facilitator'); }
