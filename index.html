@@ -591,6 +591,8 @@ const DECK = [
    STATE
    ══════════════════════════════════════════════════════════════ */
 const SK='aicr1';
+const IS_PROJECTOR = new URLSearchParams(window.location.search).get('projector')==='true';
+let IS_FACILITATOR = false;
 let ABLY_KEY='';
 let SESSION_NAME='nlc-risc-2026';
 const dflt=()=>({idx:0,sel:null,prompts:[]});
@@ -667,8 +669,8 @@ async function connectAbly(key){
     stateChannel=ablyClient.channels.get(channelName('state'));
 
     stateChannel.subscribe('hello',msg=>{ if($('facilitator').classList.contains('active')) stateChannel.publish('current',{idx:S.idx}); });
-    stateChannel.subscribe('segment',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number' && idx!==S.idx){ S.idx=idx; S.sel=null; save(); onSegmentChanged(); } });
-    stateChannel.subscribe('current',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number'){ S.idx=idx; S.sel=null; save(); onSegmentChanged(); } });
+    stateChannel.subscribe('segment',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number' && idx!==S.idx){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
+    stateChannel.subscribe('current',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number'){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
     stateChannel.subscribe('policyResult',msg=>{ policyResult=msg.data?.text||null; if($('projector-screen').classList.contains('active')) renderProjector(); if($('facilitator').classList.contains('active')) renderFacPreview(); });
 
     voteChannel.subscribe('vote',msg=>{
@@ -772,6 +774,17 @@ function startTicker(){ const els=qa('.ticker'); const tick=()=>{ const m=TICKS[
 /* ══════════════════════════════════════════════════════════════
    SEGMENT (AUDIENCE) RENDERING
    ══════════════════════════════════════════════════════════════ */
+// Routes an incoming state broadcast based on this tab's role.
+// The projector and facilitator tabs are also connected to Ably (so they stay in sync
+// if another device drives the show), but they must NEVER run the audience navigation
+// logic in onSegmentChanged — that's what was flipping the projector to the "look at
+// the main screen" holding card. Projector just re-renders itself; facilitator just
+// refreshes its own console state; only audience phones flip screens.
+function onStateSynced(){
+  if(IS_PROJECTOR){ renderProjector(); }
+  else if(IS_FACILITATOR){ renderFacilitator(); }
+  else{ onSegmentChanged(); }
+}
 function onSegmentChanged(){
   const seg=DECK[S.idx];
   if(!seg) return;
@@ -1043,7 +1056,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!$('landing').classList.contains('active')){ typed=''; return; }
     if(e.key.length!==1){ typed=''; return; }
     typed=(typed+e.key.toLowerCase()).slice(-SECRET.length);
-    if(typed===SECRET){ typed=''; renderFacilitator(); showScreen('facilitator'); }
+    if(typed===SECRET){ typed=''; IS_FACILITATOR=true; renderFacilitator(); showScreen('facilitator'); }
   });
 });
 </script>
