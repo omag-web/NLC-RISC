@@ -145,13 +145,13 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .proj-title{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.2rem);font-weight:900;color:#fff;letter-spacing:.04em;}
 .proj-q{font-family:var(--disp);font-size:clamp(1.05rem,2.1vw,1.6rem);font-weight:700;color:var(--cyan);letter-spacing:.03em;margin-bottom:.5rem;}
 .proj-input-badge{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.95rem);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:.5rem 1.1rem;margin-bottom:1.1rem;animation:pulse 2s ease-in-out infinite;}
-.proj-wait-row{display:flex;align-items:center;gap:2.5rem;margin-top:1.5rem;flex-wrap:wrap;}
+.proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
 .proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
 .proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
 .proj-presenter{font-family:var(--body);}
-.proj-presenter .name{font-family:var(--disp);font-size:clamp(1.1rem,2.2vw,1.6rem);font-weight:700;color:#fff;letter-spacing:.02em;}
-.proj-presenter .title{font-size:clamp(.85rem,1.6vw,1.1rem);color:var(--text2);margin-top:.3rem;}
-.proj-presenter .scan-note{font-family:var(--mono);font-size:clamp(.65rem,1.2vw,.85rem);color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;margin-top:1rem;}
+.proj-presenter .name{font-family:var(--disp);font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:700;color:#fff;letter-spacing:.02em;}
+.proj-presenter .title{font-size:clamp(1.05rem,2vw,1.4rem);color:var(--text2);margin-top:.4rem;}
+.proj-presenter .scan-note{font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.9rem);color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;margin-top:1.2rem;}
 .proj-bar-wrap{margin-bottom:1.3rem;}
 .proj-bar-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:clamp(.7rem,1.5vw,1rem);color:var(--text2);margin-bottom:.5rem;}
 .proj-bar-pct{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.4rem);font-weight:900;}
@@ -460,7 +460,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
   <div class="w" id="proj-body" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.1rem;border-top:1px solid var(--border);padding-top:1.3rem;"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:1rem;border-top:1px solid var(--border);">
     <div style="display:flex;align-items:center;gap:1rem;">
-      <div style="padding:6px;background:#fff;border-radius:8px;box-shadow:0 0 20px rgba(0,229,255,0.3);display:inline-block;">
+      <div id="proj-footer-qr" style="padding:6px;background:#fff;border-radius:8px;box-shadow:0 0 20px rgba(0,229,255,0.3);display:inline-block;">
         <img src="images/AI-Interactive-QR.png" alt="Scan to join" style="width:64px;height:64px;display:block;border-radius:3px;"/>
       </div>
       <div class="ticker" id="tick-proj"></div>
@@ -477,7 +477,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
    RUN OF SHOW — edit content/order here
    ══════════════════════════════════════════════════════════════ */
 const DECK = [
-{id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI','for Public Organizations'],
+{id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI for Public Organizations'],
  showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',
  notes:'This is the waiting screen — sits on the projector until you click Next. Welcome, housekeeping, then advance to the pulse check.'},
 
@@ -1024,10 +1024,11 @@ function renderSubs(){
    ══════════════════════════════════════════════════════════════ */
 function renderProjector(){
   const seg=DECK[S.idx]; if(!seg) return;
-  $('proj-kicker').textContent=(seg.kicker||seg.label||'AI CONTROL ROOM').toUpperCase();
+  $('proj-kicker').textContent = seg.type==='slide' ? 'AI CONTROL ROOM' : (seg.kicker||seg.label||'AI CONTROL ROOM').toUpperCase();
   const body=$('proj-body');
   $('proj-vote-count').style.display = seg.opts ? 'flex':'none';
   if(seg.opts) $('proj-total').textContent=totalVotes(seg.id);
+  const footerQR=$('proj-footer-qr'); if(footerQR) footerQR.style.display = seg.showQR ? 'none' : 'inline-block';
 
   if(seg.type==='slide'){
     let html=`<div class="slide-kicker">${esc(seg.kicker||'')}</div><div class="slide-title">${esc(seg.title||'')}</div>`;
@@ -1036,12 +1037,12 @@ function renderProjector(){
     if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
     if(seg.showQR){
       html+=`<div class="proj-wait-row">
-        <div class="proj-wait-qr"><img src="images/AI-Interactive-QR.png" alt="Scan to join"/></div>
         <div class="proj-presenter">
           ${seg.presenter?`<div class="name">${esc(seg.presenter)}</div>`:''}
           ${seg.presenterTitle?`<div class="title">${esc(seg.presenterTitle)}</div>`:''}
           <div class="scan-note">Scan to join on your phone</div>
         </div>
+        <div class="proj-wait-qr"><img src="images/AI-Interactive-QR.png" alt="Scan to join"/></div>
       </div>`;
     }
     body.innerHTML=html; body.style.justifyContent='flex-start';
