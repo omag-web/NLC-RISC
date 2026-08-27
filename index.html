@@ -468,27 +468,95 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 const DECK = [
 {id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI','for Public Organizations'],notes:'Cold open. Welcome, housekeeping, then straight to QR code.'},
 
-{id:'baseline',type:'poll',min:4,label:'Baseline Check',setup:'Your organization is considering generative AI.',q:'What should employees be allowed to do?',
- opts:[{id:'A',txt:'🟢 Experiment freely',g:{inno:6,priv:-4,acc:-2,human:-3}},
-       {id:'B',txt:'🟡 Use approved tools with guardrails',g:{inno:2,priv:2,acc:2,human:2}},
-       {id:'C',txt:'🔴 Restrict AI until policies are established',g:{inno:-5,priv:4,acc:1,human:3}}],
- notes:'"Okay. That\'s our organization. Let\'s see how well we run it." Show live results, then move on — no reveal needed.'},
+{id:'pulse-open',type:'poll',min:1,label:'Opening Pulse Check',setup:'Before we start —',q:'How are you feeling about AI right now?',
+ opts:[{id:'A',txt:'😬 Mostly concerned',g:{inno:-3,priv:3,acc:1,human:2}},{id:'B',txt:'🤔 Interested, but cautious',g:{inno:1,priv:1,acc:1,human:1}},{id:'C',txt:'👍 Already using it',g:{inno:3,priv:-1,acc:0,human:-1}},{id:'D',txt:'🚀 Give me all the AI',g:{inno:5,priv:-3,acc:-2,human:-3}}],
+ notes:'"We\'ll ask this again before you leave." Don\'t dwell — quick tap, move on.'},
 
-{id:'sl-whatami',type:'slide',min:8,kicker:'PART 1 · WHAT ARE WE TALKING ABOUT',title:'AI Platform vs. AI Model',
- bullets:['Platform: ChatGPT, Claude, Gemini, Copilot','Model: the engine underneath — GPT, Claude Opus/Sonnet, Gemini','Different models produce different results','Reasoning models vs. fast general-purpose models','Free/consumer accounts vs. enterprise environments'],
- callout:'Choosing an AI tool isn\'t just choosing a brand.',notes:'8 min. Not a history lesson — this is the model vs platform distinction.'},
+{id:'adoption-stat',type:'slide',min:2,kicker:'WHY THIS MATTERS NOW',title:'Interest Is Moving Faster Than Governance',
+ columns:[{h:'96%',d:'of mayors are interested in using AI'},{h:'9%',d:'of local governments have a formal internal AI policy'},{h:'38%',d:'say their org isn\'t prepared to use AI safely'}],
+ notes:'Let the contrast breathe for a second before moving on.'},
 
-{id:'sl-goodat',type:'slide',min:10,kicker:'PART 2 · WHAT IS AI GOOD AT',title:'Five Kinds of Assistance',
- columns:[{h:'CREATE',d:'Drafting, brainstorming, rewriting, designing'},
-          {h:'UNDERSTAND',d:'Summarizing documents, explaining, spotting themes'},
-          {h:'ANALYZE',d:'Working through data, comparing, finding patterns'},
-          {h:'TRANSFORM',d:'Policy → FAQ. Report → slides. Notes → action items.'},
-          {h:'ASSIST',d:'Process, research, planning, repetitive admin work'}],
- notes:'Establish usefulness before risk.'},
+{id:'wrong-question',type:'slide',min:1,kicker:'REFRAME',title:'"Should We Allow AI?" Is the Wrong Question',
+ bullets:['The better question: "How should we use it?"','AI is already entering our organizations — through employees, vendors, software, and public expectations.'],
+ callout:'Ban it. Anything goes. Or: responsible use.',notes:'Two road signs colliding into a third path — say it, don\'t need to show it.'},
 
-{id:'sl-mission1',type:'slide',min:1,kicker:'YOUR FIRST AI MISSION',title:'A City Manager Just Handed You a Problem',
- bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you write the prompt'],
- notes:'Transition slide into the Press Release mission.'},
+{id:'platform-model',type:'slide',min:2,kicker:'FIRST, LET\'S CLEAR SOMETHING UP',title:'Platform vs. Model — Think of It Like a Vehicle',
+ columns:[{h:'PLATFORM',d:'The vehicle — ChatGPT, Claude, Gemini, Copilot'},{h:'MODEL',d:'The engine — GPT, Claude Sonnet/Opus, Gemini models'},{h:'TOOLS',d:'What the vehicle can access or do'},{h:'DATA',d:'What you\'re putting inside it'}],
+ callout:'Two people can "use the same AI" while actually using very different systems.',
+ notes:'The app is not the intelligence itself. This is the model-vs-platform literacy moment.'},
+
+{id:'model-choices',type:'slide',min:1,kicker:'MODELS ARE NOT INTERCHANGEABLE',title:'⚡ Fast · 🧠 Balanced · 🔬 Deep',
+ columns:[{h:'⚡ FAST',d:'Routine tasks, high volume, quick answers, lower cost'},{h:'🧠 BALANCED',d:'Strong reasoning, everyday professional work'},{h:'🔬 DEEP',d:'Complex reasoning, large problems, higher cost'}],
+ callout:'The best model is the one appropriate for the task.',notes:'Sets up the Pick The AI vote next.'},
+
+{id:'pick-ai',type:'poll',min:2,label:'Pick The AI',setup:'Rewrite this 200-word event announcement so it\'s easier for residents to understand.',q:'Which would you choose?',
+ opts:[{id:'A',txt:'⚡ FAST',g:{inno:2,acc:0}},{id:'B',txt:'🧠 BALANCED',g:{inno:1,acc:1}},{id:'C',txt:'🔬 DEEP',g:{acc:1,human:1}}],
+ notes:'Reveal verbally: probably FAST or BALANCED. Takeaway: more powerful isn\'t automatically more appropriate.'},
+
+{id:'sl-edges',type:'slide',min:2,kicker:'AI HAS EDGES',title:'Data · Accuracy · Decision · Accountability',
+ columns:[{h:'DATA',d:'What did you give it?'},{h:'ACCURACY',d:'Is the output true?'},{h:'DECISION',d:'What authority did you give it?'},{h:'ACCOUNTABILITY',d:'Who owns the result?'}],
+ notes:'Transition from capability to governance.'},
+
+{id:'confidence-accuracy',type:'slide',min:2,kicker:'A CRITICAL DISTINCTION',title:'AI Confidence ≠ AI Accuracy',
+ bullets:['It can be spectacularly helpful — and spectacularly wrong — with exactly the same confidence.'],
+ callout:'The interface doesn\'t look nervous when it\'s guessing.',notes:'Sets up Trust It or Check It.'},
+
+{id:'trust-check',type:'scenario',min:3,label:'Trust It or Check It?',
+ setup:'A fictional policy document says, in Section 4: "Employees must report incidents within five business days." AI was asked: "According to this policy, how quickly must an incident be reported?" It answered: "Employees must report incidents within five business days."',
+ q:'What do you do with this answer?',
+ opts:[
+  {id:'A',txt:'TRUST IT',out:'There\'s a problem: a revised Section 8, elsewhere in the same document, says "Report within 72 hours." Both sections exist. AI picked one and presented it with full confidence — it should have flagged the conflict, not selected a winner.'},
+  {id:'B',txt:'CHECK IT',out:'Good instinct. A quick check reveals Section 8 was revised to require reporting within 72 hours — directly contradicting Section 4. AI picked one answer with full confidence instead of flagging the conflict.'},
+  {id:'C',txt:'REJECT IT',out:'The answer wasn\'t fabricated — it\'s real text from Section 4. The actual problem is subtler: a revised Section 8 elsewhere says 72 hours. AI should have flagged the conflict between the two, not silently picked one.'},
+ ],notes:'The problem wasn\'t AI — it was the authority we gave it to pick a single answer instead of surfacing the conflict. AI can organize, summarize, compare, surface patterns. Humans still judge, approve, interpret, decide.'},
+
+{id:'riscville',type:'slide',min:1,kicker:'SIMULATION MODE (skip if short on time)',title:'Welcome to the City of Riscville',
+ columns:[{h:'POPULATION',d:'24,600'},{h:'EMPLOYEES',d:'187'},{h:'AI POLICY',d:'None (yet)'},{h:'AI ENTHUSIASM',d:'Questionable'}],
+ notes:'Light flavor beat — you now run Riscville for the governance section.'},
+
+{id:'tc1',type:'traffic',min:2,label:'AI Traffic Control 1/4 (cut 1-2 of these if short on time)',item:'Communications wants to use AI to rewrite a publicly available council agenda into plain language for residents.',correct:0,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:'Recommended: GREEN. Why: public info, low consequence, easy human review, clear benefit. Low-risk use doesn\'t need high-friction governance.'},
+
+{id:'tc2',type:'traffic',min:2,label:'AI Traffic Control 2/4',item:'HR wants AI to create five interview questions using the publicly posted job description.',correct:0,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:'Recommended: GREEN or light YELLOW depending on your org\'s review expectations. Reasonable organizations may draw this line differently.'},
+
+{id:'tc3',type:'traffic',min:2,label:'AI Traffic Control 3/4',item:'A supervisor pastes an employee\'s medical documentation into their personal AI account and asks for a summary.',correct:2,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:'Recommended: RED. Why: sensitive information, unapproved environment, unnecessary exposure. The issue isn\'t simply AI — it\'s data + environment + purpose.'},
+
+{id:'tc4',type:'traffic',min:2,label:'AI Traffic Control 4/4',item:'An approved enterprise AI system analyzes 5,000 anonymized incident descriptions to identify recurring trends for human review.',correct:1,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:'Recommended: YELLOW. Why: significant potential value, controlled environment, anonymized data, human interpretation still required. Yellow means proceed thoughtfully, not stop.'},
+
+{id:'guardrail',type:'scenario',min:5,label:'Guardrail Triggered · The HR Complaint',
+ setup:'An HR director received a complaint alleging misconduct by an employee. They want AI to review the complaint, determine whether policy was violated, and recommend disciplinary action.',
+ q:'What happens when this request goes to AI?',
+ opts:[
+  {id:'A',txt:'AI reviews the complaint, determines guilt, and recommends discipline',out:'🚧 GUARDRAIL TRIGGERED. AI can assist with organizing information or identifying relevant policy language, but it should not autonomously determine misconduct or recommend discipline. This moved from ASSIST all the way to DECIDE — too far, too fast.',rsk:82,gInno:2},
+  {id:'B',txt:'Reframe the task: organize allegations, identify relevant policy sections, generate questions for a human investigator',out:'The reframed task worked well. AI organized the allegations against the relevant sections of policy and drafted a clean set of questions for a human investigator to ask. AI moved from decision-maker to assistant — same tool, appropriate authority.',rsk:14,gInno:1},
+  {id:'C',txt:'Decline to use AI for this entirely, keep it fully manual',out:'A safe choice, but a missed opportunity. AI could have saved real time organizing the allegations against policy language — the fix was reframing the task, not banning the tool.',rsk:38,gInno:-4},
+ ],
+ pTask:'Write the REFRAMED prompt yourself: ask AI to organize allegations, cite relevant policy sections, and draft investigator questions — without ever determining guilt or recommending discipline.',
+ pSample:'You are assisting a human HR investigator, not making a determination. Organize the following complaint into a clear timeline of allegations. For each allegation, identify the specific policy sections that may be relevant (cite them, do not interpret whether they were violated). Then draft five open-ended questions a human investigator should ask during the investigation. Do not state or imply whether misconduct occurred, and do not recommend any disciplinary outcome.',
+ notes:'This is your guardrail-not-roadblock moment. Don\'t reveal the reframe option\'s superiority until after the vote.'},
+
+{id:'gov-framework',type:'slide',min:3,kicker:'GOVERN WITHOUT BANNING',title:'Green · Yellow · Red',
+ bullets:['🟢 GREEN — normal work: brainstorming, drafting, formatting, public info, general research','🟡 YELLOW — slow down: internal docs, data analysis, HR work, claims/incident info, legal research','🔴 RED — stop or reframe: credentials, unauthorized sensitive info, autonomous high-impact decisions'],
+ callout:'A guardrail says "use AI here, under these conditions" — not "don\'t."',
+ notes:'Don\'t start with a 14-page policy. Start with organizational decisions.'},
+
+{id:'six-questions',type:'slide',min:1,kicker:'BEFORE YOU WRITE THE POLICY',title:'Six Questions Your Organization Must Answer',
+ bullets:['Which tools are approved?','What data can be used?','What requires human review?','What uses are prohibited?','Who remains accountable?','How are new tools evaluated?'],
+ callout:'A policy document can\'t answer questions your organization has never discussed.',notes:'Read these fast — they set up the policy-builder vote coming up.'},
+
+{id:'four-question-guardrail',type:'slide',min:1,kicker:'BEFORE YOU HIT SUBMIT',title:'The Four-Question Guardrail',
+ bullets:['DATA — what am I giving it?','DECISION — what am I asking it to do?','ENVIRONMENT — where is the information going?','DOUBLE-CHECK — what must a human verify?'],
+ callout:'If employees remember nothing else, remember these four questions.',notes:'This is the single most portable takeaway of the whole session.'},
+
+{id:'mission1-intro',type:'slide',min:1,kicker:'YOUR FIRST AI MISSION',title:'A City Manager Just Handed You a Problem',
+ bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you write the prompt'],notes:'Transition into the Press Release mission.'},
 
 {id:'m-press',type:'scenario',min:6,label:'Mission 1 · The Press Release',
  setup:'A department head asks your communications team to let AI write a press release about a new city infrastructure grant. They send over a one-paragraph summary and tell you to make it a full release. The department head says they will approve it with a quick read.',
@@ -502,38 +570,14 @@ const DECK = [
  pSample:'Draft a press release for a city government announcing a new infrastructure grant. Use the following information as your source. Use standard press release format: headline, dateline, opening paragraph with the key facts, one or two supporting paragraphs with context, a quote placeholder clearly marked as needing official approval, and a boilerplate closing. Flag any specific numbers or claims that should be verified against official sources before distribution.',
  notes:'This is your hallucination teaching moment. Option A is the trap.'},
 
-{id:'sl-edges',type:'slide',min:10,kicker:'PART 3 · WHERE DOES AI GET DANGEROUS',title:'AI Has Edges',
- columns:[{h:'DATA',d:'What are you giving the AI?'},{h:'ACCURACY',d:'Can you trust what comes back?'},{h:'DECISIONS',d:'Is AI assisting a human, or deciding?'},{h:'ACCOUNTABILITY',d:'Who owns the result?'}],
- callout:'AI confidence and AI accuracy are not the same thing.',notes:'Hallucinations, false citations, confidential info, bias, overreliance.'},
+{id:'verdict-press',type:'poll',min:1,label:'Would You Use It?',q:'Looking at that press release outcome — would you use this workflow?',
+ opts:[{id:'A',txt:'✅ USE IT — ready with normal review',g:{human:1}},{id:'B',txt:'✏️ REVIEW IT — helpful, but needs work',g:{human:2}},{id:'C',txt:'🚫 DON\'T USE IT — not appropriate or trustworthy',g:{human:-1}}],
+ notes:'Quick gut-check poll, no reveal needed — the split itself is the discussion.'},
 
-{id:'m-comments',type:'scenario',min:4,label:'Quick Vote · The Comment Flood',
- setup:'The city council has approved a controversial zoning change. The city Facebook page has received 340 comments in four hours. Many are angry. Staff are unsure whether to engage, hide, or ignore them.',
- q:'What is the best use of AI in this situation?',
- opts:[
-  {id:'A',txt:'Auto-respond to every comment with a standard AI message',out:'Residents immediately recognized the responses as automated and posted side-by-side comparisons. Automation in a high-emotion moment reads as indifference.',rsk:76,gInno:2},
-  {id:'B',txt:'Use AI to categorize comments by theme, then have humans draft responses to each type',out:'AI organized 340 comments into six categories in minutes. Humans posted responses that addressed actual concerns. Residents felt heard, even those who disagreed.',rsk:20,gInno:3},
-  {id:'C',txt:'Hide all comments until the situation calms down',out:'Hiding comments on a government page raised immediate transparency concerns and became its own story about suppression.',rsk:89,gInno:-4},
- ],
- notes:'No prompt challenge here — vote, reveal, move fast. This is your guardrail-trigger beat: automation without oversight backfires.'},
+{id:'sl-model',type:'slide',min:1,kicker:'CHOOSING THE RIGHT MODEL, LIVE',title:'⚡ Fast vs. 🧠 Deep — Under Time Pressure',
+ bullets:['Same principle as Claude Sonnet vs. Claude Opus','Choosing a model is part of choosing a level of risk'],notes:'Segue into the Water Main Break mission.'},
 
-{id:'sl-gov',type:'slide',min:6,kicker:'PART 4 · GOVERN WITHOUT BANNING',title:'Green · Yellow · Red',
- bullets:['🟢 GREEN — use it: public info, brainstorming, drafting, formatting','🟡 YELLOW — use carefully: internal docs, claims data, HR work, legal research','🔴 RED — stop: credentials, PHI, privileged communications, autonomous high-impact decisions'],
- callout:'Don\'t begin with a 14-page policy. Begin with organizational decisions.',notes:'This becomes the heart of the session.'},
-
-{id:'tc1',type:'traffic',min:2,label:'AI Traffic Control 1/4',item:'Paste a publicly available council agenda into AI and generate a plain-language summary.',correct:0,
- opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}]},
-{id:'tc2',type:'traffic',min:2,label:'AI Traffic Control 2/4',item:'Upload 500 anonymized claim descriptions into an org-approved enterprise AI environment to identify trends.',correct:1,
- opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}]},
-{id:'tc3',type:'traffic',min:2,label:'AI Traffic Control 3/4',item:'Paste an employee\'s medical documentation into your personal AI account to summarize an accommodation request.',correct:2,
- opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}]},
-{id:'tc4',type:'traffic',min:2,label:'AI Traffic Control 4/4',item:'Ask AI to draft five interview questions for an open position.',correct:0,
- opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}]},
-
-{id:'sl-model',type:'slide',min:3,kicker:'CHOOSING THE RIGHT MODEL',title:'⚡ Fast vs. 🧠 Deep',
- bullets:['⚡ FAST — routine tasks, quick turnaround','🧠 DEEP — complex reasoning, high-stakes analysis','Same principle as Claude Sonnet vs. Claude Opus'],
- callout:'Choosing a model is part of choosing a level of risk.',notes:'Segues into the Water Main Break mission — frame it as a FAST vs DEEP choice.'},
-
-{id:'m-water',type:'scenario',min:7,label:'Mission 2 · The Water Main Break',
+{id:'m-water',type:'scenario',min:6,label:'Mission 2 · The Water Main Break',
  setup:'A major water main has broken in a residential neighborhood. Repairs will take 6 to 8 hours. Residents have no water. Your team has one person on duty and is being flooded with calls. Leadership wants something out in the next 10 minutes.',
  q:'What is the best use of AI right now?',
  opts:[
@@ -545,46 +589,34 @@ const DECK = [
  pSample:'You are a municipal communications specialist. Draft a short public statement for a city experiencing a water main break. Include: what happened in plain language, which area is affected, the estimated repair timeline, what residents should do right now, and when the next update will come. Keep it under 150 words. Do not speculate about causes. Use a calm, factual tone.',
  notes:'Frame this live as: which option is FAST, which is DEEP, which is reckless speed.'},
 
-{id:'sl-monday',type:'slide',min:2,kicker:'PART 5 · MONDAY MORNING',title:'Rapid Fire: Real Departments, Real Prompts',
- bullets:['AI Role: Assist','Human Role: Decide'],notes:'Quick vote-only rounds, no prompt challenge — keep pace up.'},
+{id:'verdict-water',type:'poll',min:1,label:'Would You Use It?',q:'And that holding statement — would you use this workflow?',
+ opts:[{id:'A',txt:'✅ USE IT',g:{human:1}},{id:'B',txt:'✏️ REVIEW IT',g:{human:2}},{id:'C',txt:'🚫 DON\'T USE IT',g:{human:-1}}],
+ notes:'Quick gut-check, move straight into policy building.'},
 
-{id:'m-announce',type:'scenario',min:3,label:'Rapid Fire · The Announcement That Went Live',
- setup:'Your city posted AI-drafted trash pickup info that turned out to be outdated. It went to 40,000 followers before anyone caught it.',
- q:'What should your team do first?',
- opts:[
-  {id:'A',txt:'Delete the post and say nothing until you have correct info',out:'Deleting without explanation read as evasion. A reporter noticed and started asking questions.',rsk:68,gInno:-2},
-  {id:'B',txt:'Post a clear correction immediately, owning the error',out:'A direct correction within 20 minutes stopped the spread. Residents respected the transparency.',rsk:16,gInno:3},
-  {id:'C',txt:'Leave the post up, address it only on the city website',out:'Most residents never checked the website. The incorrect post kept circulating into neighborhood groups.',rsk:74,gInno:-3},
- ],notes:'Vote + reveal only, no prompt. Move fast.'},
-
-{id:'m-rumor',type:'scenario',min:3,label:'Rapid Fire · The Facebook Rumor (backup — cut if short on time)',
- setup:'A false claim about fluoride in the water supply is circulating with 800 shares. A TV reporter calls in 30 minutes.',
- q:'How should your team respond?',
- opts:[
-  {id:'A',txt:'Draft a forceful rebuttal that directly names and refutes the claim',out:'Naming the claim while refuting it amplified it — engagement on the false post spiked.',rsk:71,gInno:2},
-  {id:'B',txt:'Draft a calm, factual statement that leads with what is true',out:'Leading with facts and a link to the water quality report gave residents something accurate to share.',rsk:19,gInno:2},
-  {id:'C',txt:'Report the accounts spreading the claim for removal',out:'Screenshots of the reporting requests spread with a "city tries to silence residents" framing — a second, worse story.',rsk:84,gInno:-1},
- ],notes:'Backup — only run if the hour has room. Vote + reveal only.'},
-
-{id:'sl-policy',type:'slide',min:2,kicker:'BUILD IT TOGETHER',title:'Let\'s Build YOUR AI Policy',
+{id:'sl-policy',type:'slide',min:1,kicker:'BUILD IT TOGETHER',title:'Let\'s Build YOUR AI Policy',
  bullets:['Your answers to the next four questions become the room\'s principles','No right answers — just decisions'],notes:'Set up the 4 policy questions.'},
 
-{id:'pq1',type:'policy',min:2,label:'Policy Question 1/4',q:'What kind of data should be prohibited from AI tools?',
- opts:[{id:'A',txt:'Highly sensitive personal & health information'},{id:'B',txt:'Any data not already public'},{id:'C',txt:'Nothing — trust employee judgment'}]},
-{id:'pq2',type:'policy',min:2,label:'Policy Question 2/4',q:'Should high-impact decisions require human review?',
- opts:[{id:'A',txt:'Yes — always'},{id:'B',txt:'Only for HR, legal, and safety decisions'},{id:'C',txt:'No — if AI is confident, let it decide'}]},
-{id:'pq3',type:'policy',min:2,label:'Policy Question 3/4',q:'Should employees be limited to approved AI tools?',
- opts:[{id:'A',txt:'Yes — approved tools only'},{id:'B',txt:'Approved tools for work data, anything for brainstorming'},{id:'C',txt:'No restrictions'}]},
-{id:'pq4',type:'policy',min:2,label:'Policy Question 4/4',q:'Who is responsible for verifying AI output before it goes out?',
- opts:[{id:'A',txt:'The employee who used the tool'},{id:'B',txt:'A designated reviewer, every time'},{id:'C',txt:'Whoever it affects will catch it'}]},
+{id:'pq1',type:'policy',min:1,label:'Policy Question 1/4',q:'Should employees be limited to approved AI platforms?',
+ opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}]},
+{id:'pq2',type:'policy',min:1,label:'Policy Question 2/4',q:'Should consequential AI outputs require human review?',
+ opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}]},
+{id:'pq3',type:'policy',min:1,label:'Policy Question 3/4',q:'Can sensitive organizational information be entered into personal AI accounts?',
+ opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}]},
+{id:'pq4',type:'policy',min:1,label:'Policy Question 4/4',q:'Who owns responsibility for AI-assisted work?',
+ opts:[{id:'A',txt:'AI vendor'},{id:'B',txt:'Employee'},{id:'C',txt:'Organization'},{id:'D',txt:'IT'}]},
 
 {id:'policy-reveal',type:'policy-reveal',min:3,label:'Your Room\'s AI Principles',notes:'Click "Generate Room\'s AI Principles" in the panel below once all 4 policy votes are in.'},
 
-{id:'health-reveal',type:'health-reveal',min:2,label:'Room AI Health Check',notes:'Reveal the four gauges — talk through what the room optimized for.'},
+{id:'health-reveal',type:'health-reveal',min:2,label:'Room AI Health Check',notes:'Reveal the four gauges — talk through what the room optimized for across the whole hour.'},
 
-{id:'closing',type:'slide',min:2,kicker:'CLOSING',title:'Responsible AI Isn\'t About Saying No',
- bullets:['What can we use?','What must we share carefully?','What must we verify?','What still requires a human?'],
- callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',notes:'End here. Thank the room.'},
+{id:'pulse-close',type:'poll',min:1,label:'Final Pulse Check',setup:'Same four options as when we started —',q:'How are you feeling about AI now?',
+ opts:[{id:'A',txt:'😬 Mostly concerned'},{id:'B',txt:'🤔 Interested, but cautious'},{id:'C',txt:'👍 Already using it'},{id:'D',txt:'🚀 Give me all the AI'}],
+ notes:'Compare live results to the opening pulse check out loud — that shift IS the closing argument.'},
+
+{id:'closing',type:'slide',min:1,kicker:'CLOSING',title:'Know the Tool. Know the Edges. Build the Guardrails.',
+ bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment'],
+ callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',
+ notes:'End here. Point to resources / QR for the session hub. Thank the room.'},
 ];
 
 /* ══════════════════════════════════════════════════════════════
@@ -616,6 +648,7 @@ function applyGaugeDelta(g){
 
 // derive gauge delta for a scenario option from rsk + gInno
 function scenarioGaugeDelta(opt){
+  if(typeof opt.rsk!=='number') return null; // literacy-style options with no risk score don't move gauges
   const base=Math.round((50-opt.rsk)/10);
   return {inno:(typeof opt.gInno==='number'?opt.gInno:base), priv:base, acc:base, human:base};
 }
