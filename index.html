@@ -152,7 +152,9 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .proj-presenter{font-family:var(--body);}
 .proj-presenter .name{font-family:var(--disp);font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:700;color:#fff;letter-spacing:.02em;}
 .proj-presenter .title{font-size:clamp(1.05rem,2vw,1.4rem);color:var(--text2);margin-top:.4rem;}
+.proj-presenter .contact{font-family:var(--mono);font-size:clamp(.8rem,1.5vw,1.05rem);color:var(--cyan);margin-top:.7rem;letter-spacing:.02em;}
 .scan-note{font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.9rem);color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;}
+.qr-url-note{font-family:var(--mono);font-size:clamp(.65rem,1.1vw,.85rem);color:var(--text2);letter-spacing:.04em;}
 .proj-bar-wrap{margin-bottom:1.3rem;}
 .proj-bar-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:clamp(.7rem,1.5vw,1rem);color:var(--text2);margin-bottom:.5rem;}
 .proj-bar-pct{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.4rem);font-weight:900;}
@@ -173,6 +175,8 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .slide-col h3{font-family:var(--disp);font-size:clamp(.95rem,1.6vw,1.2rem);color:var(--cyan);letter-spacing:.08em;margin-bottom:.5rem;}
 .slide-col p{font-family:var(--body);font-size:clamp(.9rem,1.4vw,1.1rem);color:var(--text2);line-height:1.5;}
 .slide-callout{margin-top:auto;font-family:var(--disp);font-size:clamp(1.1rem,2.4vw,1.7rem);font-weight:700;color:var(--amber);text-shadow:var(--gamber);border-top:1px solid var(--border);padding-top:1.2rem;width:100%;}
+.slide-images{display:flex;flex-direction:column;gap:1.1rem;width:100%;}
+.slide-images img{width:100%;height:auto;border-radius:10px;box-shadow:0 0 30px rgba(0,229,255,0.12);border:1px solid var(--border);}
 .watch-card{display:flex;flex-direction:column;align-items:center;gap:1.2rem;padding:3rem 1rem;text-align:center;}
 .watch-card svg{opacity:.7;}
 /* gauges */
@@ -499,7 +503,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
    ══════════════════════════════════════════════════════════════ */
 const DECK = [
 {id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI for Public Organizations'],
- showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',priority:'must',
+ showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',qrUrl:'link.omag.org/nlc-risc',priority:'must',
  notes:{say:'Welcome the room, quick housekeeping, thank the organizers.',land:'This is the waiting screen — sits on the projector until you click Next.'}},
 
 {id:'pulse-open',type:'poll',min:1,label:'Opening Pulse Check',setup:'Before we start —',q:'How are you feeling about AI right now?',priority:'must',
@@ -521,6 +525,12 @@ const DECK = [
  columns:[{h:'PLATFORM',d:'The vehicle — ChatGPT, Claude, Gemini, Copilot'},{h:'MODEL',d:'The engine — GPT, Claude Sonnet/Opus, Gemini models'},{h:'TOOLS',d:'What the vehicle can access or do'},{h:'DATA',d:'What you\'re putting inside it'}],
  callout:'Two people can "use the same AI" while actually using very different systems.',
  notes:{say:'The app is not the intelligence itself.',land:'This is the model-vs-platform literacy moment.'}},
+
+{id:'model-examples',type:'slide',min:2,kicker:'WHAT THIS ACTUALLY LOOKS LIKE',title:'Every Platform, Multiple Models',priority:'runiftime',
+ bullets:['Copilot, ChatGPT, and Claude each hand you a menu like this the moment you open them.'],
+ images:['images/Models_0000_Co-Pilot-Models.png','images/Models_0001_Chat-GPT-Models.png','images/Models_0002_Claude-Models.png'],
+ callout:'Same brand, three (or four) different engines under the hood.',
+ notes:{say:'Point out that each platform now defaults to asking which model you want before you even start.',land:'This is exactly the Fast/Balanced/Deep idea from the last slide, made concrete.'}},
 
 {id:'model-choices',type:'slide',min:1,kicker:'MODELS ARE NOT INTERCHANGEABLE',title:'⚡ Fast · 🧠 Balanced · 🔬 Deep',priority:'runiftime',
  bullets:['Every platform now offers more than one model — picking the right one is part of using AI responsibly.'],
@@ -690,6 +700,13 @@ const DECK = [
  bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment','None of this requires you to be an AI expert — it requires you to be clear about where the line is'],
  callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',
  notes:{say:'Point to resources / QR for the session hub.',land:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible. Thank the room.'}},
+
+{id:'thank-you',type:'slide',min:3,kicker:'THANK YOU',title:'Questions?',priority:'must',
+ bullets:['Reach out anytime — happy to talk AI governance, guardrails, or how this session was built.'],
+ showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',
+ presenterPhone:'405-657-1428',presenterEmail:'mburleson@omag.org',qrLabel:'Scan to revisit the session',
+ callout:'The goal was never to make you afraid of AI. It was to make you ready for it.',
+ notes:{say:'Open the floor for Q&A.',land:'Leave this screen up as long as people are lingering — thank the room.'}},
 ];
 
 /* ══════════════════════════════════════════════════════════════
@@ -1114,16 +1131,20 @@ function renderProjector(){
     let html=`<div class="slide-kicker">${esc(seg.kicker||'')}</div><div class="slide-title">${esc(seg.title||'')}</div>`;
     if(seg.columns){ html+=`<div class="slide-cols">${seg.columns.map(c=>`<div class="slide-col"><h3>${esc(c.h)}</h3><p>${esc(c.d)}</p></div>`).join('')}</div>`; }
     if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
+    if(seg.images){ html+=`<div class="slide-images">${seg.images.map(src=>`<img src="${esc(src)}" alt="Model comparison"/>`).join('')}</div>`; }
     if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
     if(seg.showQR){
+      const contact=[seg.presenterPhone,seg.presenterEmail].filter(Boolean).join('  ·  ');
       html+=`<div class="proj-wait-row">
         <div class="proj-presenter">
           ${seg.presenter?`<div class="name">${esc(seg.presenter)}</div>`:''}
           ${seg.presenterTitle?`<div class="title">${esc(seg.presenterTitle)}</div>`:''}
+          ${contact?`<div class="contact">${esc(contact)}</div>`:''}
         </div>
         <div class="proj-qr-block">
-          <div class="scan-note">Scan to join on your phone</div>
+          <div class="scan-note">${esc(seg.qrLabel||'Scan to join on your phone')}</div>
           <div class="proj-wait-qr"><img src="images/AI-Interactive-QR.png" alt="Scan to join"/></div>
+          ${seg.qrUrl?`<div class="qr-url-note">or go to ${esc(seg.qrUrl)}</div>`:''}
         </div>
       </div>`;
     }
