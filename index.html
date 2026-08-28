@@ -339,6 +339,10 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     </div>
     <div class="badge"><span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber);"></span>INPUT MODE</div>
   </div>
+  <div class="panel" id="prompt-frame-panel" style="display:none;background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.3);">
+    <div style="font-family:var(--mono);font-size:.6rem;color:#a78bfa;letter-spacing:.12em;margin-bottom:.4rem;">YOUR VOTE, CARRIED FORWARD</div>
+    <p style="font-size:.88rem;color:var(--text2);line-height:1.65;" id="prompt-frame-text"></p>
+  </div>
   <div class="panel bkt w">
     <div class="slabel">YOUR MISSION</div>
     <p style="font-size:.92rem;color:var(--text2);line-height:1.72;" id="prompt-task"></p>
@@ -591,6 +595,9 @@ const DECK = [
  ],
  pTask:'Give AI the reframed job yourself: organize allegations, cite relevant policy sections, and draft investigator questions — without ever determining guilt or recommending discipline.',
  pSample:'You are assisting a human HR investigator, not making a determination. Organize the following complaint into a clear timeline of allegations. For each allegation, identify the specific policy sections that may be relevant (cite them, do not interpret whether they were violated). Then draft five open-ended questions a human investigator should ask during the investigation. Do not state or imply whether misconduct occurred, and do not recommend any disciplinary outcome.',
+ pFrame:{A:'You let AI determine guilt and recommend discipline — that\'s exactly the guardrail this scenario exists to catch. Now try the version that keeps AI in the room without handing it the decision.',
+  B:'You reframed the task instead of either extreme — that\'s exactly the move. Now let\'s see if you can actually write the assignment that pulls it off: organizing, citing policy, drafting questions, without ever determining guilt.',
+  C:'You kept it fully manual — safe, but you gave up real time AI could have saved organizing the complaint against policy. Let\'s see if you can build an assignment that gets that help without crossing into a decision AI shouldn\'t make.'},
  notes:{say:'And now Riscville has its first real test.',ask:'What happens when this request goes to AI?',reveal:'Don\'t reveal the reframe option\'s superiority until after the vote.',land:'This is your guardrail-not-roadblock moment. Last Riscville-branded screen — header returns to normal after this.'}},
 
 {id:'gov-framework',type:'slide',min:3,kicker:'GOVERN WITHOUT BANNING',title:'Green · Yellow · Red',priority:'must',
@@ -622,6 +629,9 @@ const DECK = [
  ],
  pTask:'Give AI the job of drafting a government press release that is structured professionally and flags where facts need verification.',
  pSample:'Draft a press release for a city government announcing a new infrastructure grant. Use the following information as your source. Use standard press release format: headline, dateline, opening paragraph with the key facts, one or two supporting paragraphs with context, a quote placeholder clearly marked as needing official approval, and a boilerplate closing. Flag any specific numbers or claims that should be verified against official sources before distribution.',
+ pFrame:{A:'You picked the fast path — get it out with a quick read and move on. That instinct is exactly how the rounded grant amount and invented quote slipped through. Now build an assignment that keeps AI\'s speed without that risk.',
+  B:'You picked the safer approach — verify before it goes out. Knowing that\'s the right call and getting AI to actually execute it are two different skills. Let\'s see if you can build the assignment that produces it.',
+  C:'You played it safe by skipping AI entirely — understandable, but it cost you speed for a risk that could have been managed differently. Let\'s see if you can build an assignment that gets you the accuracy you wanted without giving up the tool.'},
  notes:{say:'This is your hallucination teaching moment.',ask:'What is the risk in this workflow and how do you manage it?',reveal:'Option A is the trap.',land:'A polished, confident answer isn\'t the same thing as a correct one.'}},
 
 {id:'verdict-press',type:'poll',min:1,label:'Would You Use It?',q:'Looking at that press release outcome — would you use this workflow?',priority:'optional',
@@ -642,6 +652,9 @@ const DECK = [
  ],
  pTask:'Give AI the job of drafting a holding statement for a public works emergency that informs without overpromising.',
  pSample:'You are a municipal communications specialist. Draft a short public statement for a city experiencing a water main break. Include: what happened in plain language, which area is affected, the estimated repair timeline, what residents should do right now, and when the next update will come. Keep it under 150 words. Do not speculate about causes. Use a calm, factual tone.',
+ pFrame:{A:'You picked the thorough plan — solid instinct, wrong moment. A 22-minute review missed the 10-minute window entirely. Let\'s see if you can build an assignment that gets you something usable fast, without skipping the review step.',
+  B:'You picked speed with a human check before posting — that\'s the balance that actually worked. Knowing that\'s the right call and getting AI to execute it well are different skills. Let\'s see if you can build the assignment that produces it.',
+  C:'You picked pure speed with no review — that\'s exactly what let two inaccurate timelines go out unchecked. Let\'s see if you can build an assignment that keeps the speed but adds the guardrail that was missing.'},
  notes:{say:'Frame this live as: which option is FAST, which is DEEP, which is reckless speed.',ask:'What is the best use of AI right now?',land:'Right AI, right job beats both good-AI-wrong-job and fast-AI-no-guardrail.'}},
 
 {id:'verdict-water',type:'poll',min:1,label:'Would You Use It?',q:'And that holding statement — would you use this workflow?',priority:'optional',
@@ -965,6 +978,9 @@ function loadPrompt(){
   const seg=DECK[S.idx];
   $('prompt-sc-lbl').textContent=seg.label||'';
   $('prompt-task').textContent=seg.pTask||'';
+  const frame = seg.pFrame && S.sel ? seg.pFrame[S.sel] : null;
+  if(frame){ $('prompt-frame-panel').style.display='block'; $('prompt-frame-text').textContent=frame; }
+  else{ $('prompt-frame-panel').style.display='none'; }
   $('prompt-ta').value=''; $('prompt-ta').disabled=false; $('btn-submit').disabled=false;
   $('eval-panel').style.display='none'; $('eval-analyzing').style.display='flex'; $('eval-result').style.display='none';
 }
