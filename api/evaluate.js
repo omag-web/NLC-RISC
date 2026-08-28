@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',  // fast + cheap for conference use
-        max_tokens: 1000,
+        max_tokens: 550,  // trimmed from 1000 for live-event throughput — the JSON response doesn't need more, and this roughly doubles how many submissions can complete per minute under a Tier 1 account's output-token rate limit
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
