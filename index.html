@@ -175,8 +175,9 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .slide-col h3{font-family:var(--disp);font-size:clamp(.95rem,1.6vw,1.2rem);color:var(--cyan);letter-spacing:.08em;margin-bottom:.5rem;}
 .slide-col p{font-family:var(--body);font-size:clamp(.9rem,1.4vw,1.1rem);color:var(--text2);line-height:1.5;}
 .slide-callout{margin-top:auto;font-family:var(--disp);font-size:clamp(1.1rem,2.4vw,1.7rem);font-weight:700;color:var(--amber);text-shadow:var(--gamber);border-top:1px solid var(--border);padding-top:1.2rem;width:100%;}
-.slide-images{display:flex;flex-direction:column;gap:.8rem;width:100%;align-items:center;flex:1;min-height:0;justify-content:center;}
-.slide-images img{max-width:88%;max-height:23vh;width:auto;height:auto;object-fit:contain;border-radius:10px;box-shadow:0 0 30px rgba(0,229,255,0.12);border:1px solid var(--border);}
+.slide-images{display:flex;flex-direction:column;gap:.8rem;width:100%;align-items:stretch;flex:1;min-height:0;justify-content:center;}
+.slide-images .img-row{display:flex;gap:.8rem;justify-content:center;align-items:center;width:100%;flex-wrap:wrap;}
+.slide-images .img-row img{max-height:24vh;max-width:100%;width:auto;height:auto;object-fit:contain;border-radius:10px;box-shadow:0 0 30px rgba(0,229,255,0.12);border:1px solid var(--border);}
 .watch-card{display:flex;flex-direction:column;align-items:center;gap:1.2rem;padding:3rem 1rem;text-align:center;}
 .watch-card svg{opacity:.7;}
 /* gauges */
@@ -504,53 +505,53 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 const DECK = [
 {id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI for Public Organizations'],
  showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',qrUrl:'link.omag.org/nlc-risc',priority:'must',
- notes:{say:'Welcome the room, quick housekeeping, thank the organizers.',land:'This is the waiting screen — sits on the projector until you click Next.'}},
+ notes:{say:'Thanks for being here. We are going to spend the next hour talking about AI, but this is not going to be an AI lecture. You are going to make decisions, test some of these ideas yourself, and help shape where the guardrails should actually be.',ask:'Before we get started, make sure you have your phone handy and scan the QR code if you have not already.',land:'My goal is not to convince you that AI is harmless. It is to make it understandable enough that we can make better decisions about how to use it.'}},
 
 {id:'pulse-open',type:'poll',min:1,label:'Opening Pulse Check',setup:'Before we start —',q:'How are you feeling about AI right now?',priority:'must',
  opts:[{id:'A',txt:'😬 Mostly concerned',g:{inno:-3,priv:3,acc:1,human:2}},{id:'B',txt:'🤔 Interested, but cautious',g:{inno:1,priv:1,acc:1,human:1}},{id:'C',txt:'👍 Already using it',g:{inno:3,priv:-1,acc:0,human:-1}},{id:'D',txt:'🚀 Give me all the AI',g:{inno:5,priv:-3,acc:-2,human:-3}}],
- notes:{say:'"We\'ll ask this again before you leave."',ask:'How are you feeling about AI right now?',land:'Don\'t dwell — quick tap, move on.'}},
+ notes:{say:'I want to know where the room is starting. There is no right answer here, and I am genuinely interested in the mix.',ask:'How are you feeling about AI right now? Go with your gut.',reveal:'Watch the results come in. Briefly acknowledge whatever mix the room gives you without judging it.',land:'Remember where we started. We are going to come back to this at the end.'}},
 
 {id:'adoption-stat',type:'slide',min:2,kicker:'WHY THIS MATTERS NOW',title:'Interest Is Moving Faster Than Governance',priority:'must',
  bullets:['Employees are already experimenting with AI tools on their own, whether or not there\'s a policy for it.'],
  columns:[{h:'96%',d:'of mayors are interested in using AI'},{h:'9%',d:'of local governments have a formal internal AI policy'},{h:'38%',d:'say their org isn\'t prepared to use AI safely'}],
- notes:{land:'Let the contrast breathe for a second before moving on.'}},
+ notes:{say:'This is why this conversation matters. Interest in AI is extremely high, but organizational readiness is not keeping pace. And while policies are still being discussed, employees are already experimenting with these tools.',ask:'Think about your own organization for a second. Do you know exactly which AI tools people are using today?',land:'The gap between adoption and governance is where most of the risk, confusion, and opportunity lives.'}},
 
 {id:'wrong-question',type:'slide',min:1,kicker:'REFRAME',title:'"Should We Allow AI?" Is the Wrong Question',priority:'runiftime',
  bullets:['The better question: "How should we use it?"','AI is already entering our organizations — through employees, vendors, software, and public expectations.','A ban doesn\'t stop that. It just pushes it out of sight, into personal accounts and unapproved tools.'],
  callout:'Ban it. Anything goes. Or: responsible use.',
- notes:{say:'Two road signs colliding into a third path — say it, don\'t need to show it.'}},
+ notes:{say:'I think we have spent too much time asking whether organizations should allow AI. In many workplaces that question has already been answered for us. AI is showing up through employees, vendors, software updates, and tools we already own.',ask:'So instead of asking, "Should we allow it?" what if the question became, "How should we use it?"',land:'The goal is not "ban everything" or "anything goes." The interesting work is in the middle.'}},
 
 {id:'platform-model',type:'slide',min:2,kicker:'FIRST, LET\'S CLEAR SOMETHING UP',title:'Platform vs. Model — Think of It Like a Vehicle',priority:'must',
  bullets:['"We use ChatGPT" or "we use Claude" doesn\'t actually tell you much — the platform is just the vehicle.'],
  columns:[{h:'PLATFORM',d:'The vehicle — ChatGPT, Claude, Gemini, Copilot'},{h:'MODEL',d:'The engine — GPT, Claude Sonnet/Opus, Gemini models'},{h:'TOOLS',d:'What the vehicle can access or do'},{h:'DATA',d:'What you\'re putting inside it'}],
  callout:'Two people can "use the same AI" while actually using very different systems.',
- notes:{say:'The app is not the intelligence itself.',land:'This is the model-vs-platform literacy moment.'}},
+ notes:{say:'Before we talk about policy, we need just enough AI literacy to understand what we are governing. Saying "we use ChatGPT" is a little like saying "we drive a Ford." It tells me the brand, but not much about what is actually under the hood.',ask:'When someone in your organization says they use ChatGPT, Claude, Gemini, or Copilot, do you know which model, tools, or data environment they are actually using?',land:'The platform is the vehicle. The model is the engine. The tools determine what it can do, and your data is the cargo you are putting inside.'}},
 
 {id:'model-examples',type:'slide',min:2,kicker:'WHAT THIS ACTUALLY LOOKS LIKE',title:'Every Platform, Multiple Models',priority:'runiftime',
  bullets:['Copilot, ChatGPT, and Claude each hand you a menu like this the moment you open them.'],
- images:['images/Models_0000_Co-Pilot-Models.png','images/Models_0001_Chat-GPT-Models.png','images/Models_0002_Claude-Models.png'],
- callout:'Same brand, three (or four) different engines under the hood.',
+ imageRows:[['images/Models_0000_Co-Pilot-Models.png','images/Models_0001_Chat-GPT-Models.png'],['images/Models_0002_Claude-Models.png']],
+ callout:'The logo tells you the brand. The menu tells you what you\'re actually getting.',
  notes:{say:'Point out that each platform now defaults to asking which model you want before you even start.',land:'This is exactly the Fast/Balanced/Deep idea from the last slide, made concrete.'}},
 
 {id:'model-choices',type:'slide',min:1,kicker:'MODELS ARE NOT INTERCHANGEABLE',title:'⚡ Fast · 🧠 Balanced · 🔬 Deep',priority:'runiftime',
  bullets:['Every platform now offers more than one model — picking the right one is part of using AI responsibly.'],
  columns:[{h:'⚡ FAST',d:'Routine tasks, high volume, quick answers, lower cost'},{h:'🧠 BALANCED',d:'Strong reasoning, everyday professional work'},{h:'🔬 DEEP',d:'Complex reasoning, large problems, higher cost'}],
  callout:'The best model is the one appropriate for the task.',
- notes:{land:'Sets up the Pick The AI vote next.'}},
+ notes:{say:'Most major AI platforms now give you choices. Some models are optimized for speed and routine work. Others spend more time reasoning through complex problems. That does not mean the biggest model should handle every task.',ask:'Would you use your most expensive, deepest reasoning model to rewrite a two-paragraph meeting announcement?',land:'Model selection should match the job, not our desire to always use the fanciest option.'}},
 
 {id:'pick-ai',type:'poll',min:2,label:'Pick The AI',setup:'Rewrite this 200-word event announcement so it\'s easier for residents to understand.',q:'Which would you choose?',priority:'optional',
  opts:[{id:'A',txt:'⚡ FAST',g:{inno:2,acc:0}},{id:'B',txt:'🧠 BALANCED',g:{inno:1,acc:1}},{id:'C',txt:'🔬 DEEP',g:{acc:1,human:1}}],
- notes:{ask:'Which model would you choose for this task?',reveal:'Say out loud: probably FAST or BALANCED.',land:'More powerful isn\'t automatically more appropriate.'}},
+ notes:{say:'Here is a very ordinary task. Nothing consequential, nothing complicated.',ask:'Which model would you choose to rewrite this event announcement?',reveal:'If FAST or BALANCED leads, affirm it. If DEEP wins, joke that we have brought heavy machinery to a very small construction project.',land:'More powerful does not automatically mean more appropriate.'}},
 
 {id:'sl-edges',type:'slide',min:2,kicker:'AI HAS EDGES',title:'Data · Accuracy · Decision · Accountability',priority:'must',
  bullets:['Four questions worth asking before any AI-assisted work leaves your desk.'],
  columns:[{h:'DATA',d:'What did you give it?'},{h:'ACCURACY',d:'Is the output true?'},{h:'DECISION',d:'What authority did you give it?'},{h:'ACCOUNTABILITY',d:'Who owns the result?'}],
- notes:{say:'Transition from capability to governance.'}},
+ notes:{say:'Once we understand what the tools are, governance gets simpler. Most AI questions eventually come back to four things: the data we gave it, the accuracy of what came back, the authority we gave it, and who remains accountable afterward.',ask:'As we go through the next few scenarios, keep these four words in the back of your mind.',land:'Data. Accuracy. Decision. Accountability. Those are the edges.'}},
 
 {id:'confidence-accuracy',type:'slide',min:2,kicker:'A CRITICAL DISTINCTION',title:'AI Confidence ≠ AI Accuracy',priority:'runiftime',
  bullets:['It can be spectacularly helpful — and spectacularly wrong — with exactly the same confidence.','A polished, well-formatted answer is not the same thing as a correct one.'],
  callout:'The interface doesn\'t look nervous when it\'s guessing.',
- notes:{land:'Sets up Trust It or Check It.'}},
+ notes:{say:'AI has a very strange quality: it can be incredibly useful and incredibly wrong with almost exactly the same tone of voice. The answer can be polished, organized, confident, and still be wrong.',ask:'How often do we unconsciously trust something more simply because it looks professional?',land:'Presentation quality is not evidence of accuracy.'}},
 
 {id:'trust-check',type:'scenario',min:3,label:'Was AI\'s Answer Trustworthy?',priority:'must',
  setup:'Here is the full policy excerpt, in front of you the whole time: Section 4 says "Employees must report incidents within five business days." Section 8, added in a later revision to the same document, says "Report within 72 hours." Both sections currently exist side by side. AI was asked: "According to this policy, how quickly must an incident be reported?" It answered: "Employees must report incidents within five business days" — citing Section 4, with no mention of Section 8.',
@@ -560,37 +561,37 @@ const DECK = [
   {id:'B',txt:'NO — it should have flagged the conflict',out:'Exactly. AI had everything it needed to catch this — both sections were right there in the same document. It picked one and answered with full confidence instead of surfacing the disagreement.'},
   {id:'C',txt:'IT DEPENDS on which section actually governs',out:'Fair instinct, and maybe true — but that\'s exactly the point: AI never told you there was a question to resolve. It answered as if Section 4 were the only relevant text in the document.'},
  ],
- notes:{ask:'Was AI\'s answer trustworthy, given both sections were right in front of everyone the whole time?',reveal:'No hidden reveal here — everyone already has both sections. This is a genuine discussion, not a trick.',land:'The problem wasn\'t AI having wrong information — it was AI having the right information and not surfacing the conflict.'}},
+ notes:{say:'This one is deliberately not a trick. You can see both sections of the policy. AI could see both sections too. It still gave us one clean, confident answer.',ask:'Given everything on the screen, was that answer trustworthy?',reveal:'After results settle, walk through each choice briefly. YES means the quote itself was real. IT DEPENDS recognizes that a human may need to resolve the conflict. NO gets to the core issue: AI should have surfaced the contradiction.',land:'The failure here was not missing information. AI had the right information and failed to tell us there was a conflict.'}},
 
 {id:'ai-uncertainty',type:'slide',min:1,kicker:'A GOOD ANSWER LOOKS LIKE THIS TOO',title:'"I Don\'t Have Enough Information"',priority:'runiftime',
  bullets:['AI was asked which policy revision governs a specific incident type — without being given the revision date or governing section.','Its response: "I can\'t determine this from the information provided. I would need the current policy revision date and the governing section before answering." Then it stopped.'],
  callout:'That may be the best AI answer we see all day.',
- notes:{say:'The goal isn\'t getting AI to always answer.',land:'Sometimes responsible AI behavior is knowing when NOT to answer — the mirror image of what just happened when AI answered confidently instead of flagging the conflict.'}},
+ notes:{say:'We sometimes evaluate AI by whether it gives us an answer. I think we should also evaluate it by whether it knows when not to give us one.',ask:'Would you trust an AI system more or less if it occasionally told you, "I cannot determine that from what you gave me"?',reveal:'Let the quoted response sit for a second before continuing.',land:'Sometimes "I do not have enough information" is the most responsible answer AI can give.'}},
 
 {id:'riscville',type:'slide',min:1,kicker:'CITY OF RISCVILLE',title:'Welcome to the City of Riscville',priority:'must',
  bullets:['A fictional city, so nobody has to use real organizational data for what comes next.','Riscville just approved AI use. Nobody has told the departments how to use it responsibly yet — that\'s about to become very obvious.'],
  columns:[{h:'POPULATION',d:'24,600'},{h:'EMPLOYEES',d:'187'},{h:'AI POLICY',d:'None (yet)'},{h:'AI ENTHUSIASM',d:'Questionable'}],
- notes:{say:'"We just approved AI in Riscville. Let\'s see how well we run it."',land:'From here, the projector header stays branded CITY OF RISCVILLE through the guardrail scenario — keep narrating each round as the next department walking through the door.'}},
+ notes:{say:'We have talked about this in theory long enough. Welcome to Riscville. Riscville just approved AI, everyone is excited, and absolutely nobody has decided how employees are supposed to use it. So, naturally, everything is going great.',ask:'You are now helping run the city. Ready?',land:'From here on, each department is going to walk through the door with a new AI idea. You decide where the guardrails belong. The projector header stays branded CITY OF RISCVILLE through the guardrail scenario.'}},
 
 {id:'tc1',type:'traffic',min:2,label:'Riscville Traffic Control — Communications',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
  item:'Communications is first through the door: they want to use AI to rewrite a publicly available council agenda into plain language for residents.',correct:0,
  opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
- notes:{say:'Communications is first through the door.',ask:'Green, Yellow, or Red?',reveal:'Recommended: GREEN. Public info, low consequence, easy human review, clear benefit.',land:'Low-risk use doesn\'t need high-friction governance.'}},
+ notes:{say:'Communications is first. They have a public council agenda and want AI to turn it into plain language residents can understand.',ask:'Green, Yellow, or Red?',reveal:'Recommended GREEN. The source is public, the consequence is relatively low, the value is clear, and a human can easily review the result.',land:'If low-risk work requires a three-day approval process, people will simply stop following the process.'}},
 
 {id:'tc2',type:'traffic',min:2,label:'Riscville Traffic Control — HR (optional, skip if short on time)',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'optional',
  item:'HR saw what Communications was doing and decided they wanted in too — they want AI to create five interview questions using the publicly posted job description.',correct:0,
  opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
- notes:{say:'HR saw what Communications was doing and wanted in too.',ask:'Green, Yellow, or Red?',reveal:'Recommended: GREEN or light YELLOW depending on your org\'s review expectations.',land:'Reasonable organizations may draw this line differently. Cut this round first if you\'re running long.'}},
+ notes:{say:'HR saw Communications having fun and decided they wanted in. They want AI to generate interview questions from a publicly posted job description.',ask:'Green, Yellow, or Red?',reveal:'Recommended GREEN or light YELLOW. You may want review for fairness or consistency, but there is no universal answer here.',land:'Good governance does not require every organization to draw every line in exactly the same place. Cut this round first if you\'re running long.'}},
 
 {id:'tc3',type:'traffic',min:2,label:'Riscville Traffic Control — A Supervisor',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
  item:'Word is spreading fast. A supervisor decides to try it on their own — they paste an employee\'s medical documentation into their personal AI account and ask for a summary.',correct:2,
  opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
- notes:{say:'Word is spreading fast through Riscville.',ask:'Green, Yellow, or Red?',reveal:'Recommended: RED. Sensitive information, unapproved environment, unnecessary exposure.',land:'The issue isn\'t simply AI — it\'s data + environment + purpose.'}},
+ notes:{say:'Now word is spreading. A supervisor skips the approved tools entirely and pastes an employee\'s medical documentation into a personal AI account for a quick summary.',ask:'Green, Yellow, or Red?',reveal:'Recommended RED. Not because summarization is inherently dangerous, but because we have sensitive information going into an unapproved environment.',land:'The question is rarely just "Is AI allowed?" It is data plus environment plus purpose.'}},
 
 {id:'tc4',type:'traffic',min:2,label:'Riscville Traffic Control — Risk Management',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
  item:'Meanwhile, Risk Management has been sitting on 5,000 incident records they\'ve never had time to fully analyze. An approved enterprise AI system analyzes the anonymized descriptions to identify recurring trends for human review.',correct:1,
  opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
- notes:{say:'Meanwhile, Risk Management has 5,000 incident records sitting untouched.',ask:'Green, Yellow, or Red?',reveal:'Recommended: YELLOW. Significant value, controlled environment, anonymized data, human interpretation still required.',land:'Yellow means proceed thoughtfully, not stop.'}},
+ notes:{say:'Meanwhile, Risk Management has something very different. Five thousand anonymized incident descriptions are sitting there with patterns nobody has had time to examine.',ask:'Green, Yellow, or Red?',reveal:'Recommended YELLOW. There is real value here, but the environment, anonymization, methodology, and human interpretation all matter.',land:'Yellow does not mean no. Yellow means slow down enough to use the tool responsibly.'}},
 
 {id:'guardrail',type:'scenario',min:5,label:'Guardrail Triggered · The HR Complaint',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
  setup:'And now Riscville has its first real test. An HR director received a complaint alleging misconduct by an employee. They want AI to review the complaint, determine whether policy was violated, and recommend disciplinary action.',
@@ -605,26 +606,26 @@ const DECK = [
  pFrame:{A:'You let AI determine guilt and recommend discipline — that\'s exactly the guardrail this scenario exists to catch. Now try the version that keeps AI in the room without handing it the decision.',
   B:'You reframed the task instead of either extreme — that\'s exactly the move. Now let\'s see if you can actually write the assignment that pulls it off: organizing, citing policy, drafting questions, without ever determining guilt.',
   C:'You kept it fully manual — safe, but you gave up real time AI could have saved organizing the complaint against policy. Let\'s see if you can build an assignment that gets that help without crossing into a decision AI shouldn\'t make.'},
- notes:{say:'And now Riscville has its first real test.',ask:'What happens when this request goes to AI?',reveal:'Don\'t reveal the reframe option\'s superiority until after the vote.',land:'This is your guardrail-not-roadblock moment. Last Riscville-branded screen — header returns to normal after this.'}},
+ notes:{say:'Now Riscville gets its first consequential test. HR has an employee complaint and wants AI to determine whether misconduct occurred and recommend discipline.',ask:'What role should AI have here?',reveal:'Do not immediately announce the preferred answer. Let the room see the consequences first. Then contrast the extremes: Option A gives AI decision authority; Option C throws away useful assistance. Option B changes the job.',land:'This is the entire guardrail idea in one example: do not necessarily remove AI from the process. Remove authority that AI should not have. Last Riscville-branded screen — header returns to normal after this.'}},
 
 {id:'gov-framework',type:'slide',min:3,kicker:'GOVERN WITHOUT BANNING',title:'Green · Yellow · Red',priority:'must',
  bullets:['🟢 GREEN — normal work: brainstorming, drafting, formatting, public info, general research. Use it like any other tool.','🟡 YELLOW — slow down: internal docs, data analysis, HR work, claims/incident info, legal research. Needs an approved tool and a human check before it goes anywhere.','🔴 RED — stop or reframe: credentials, unauthorized sensitive info, autonomous high-impact decisions. If you\'re here, change the task, not just the tool.'],
  callout:'A guardrail says "use AI here, under these conditions" — not "don\'t."',
- notes:{say:'Don\'t start with a 14-page policy. Start with organizational decisions.'}},
+ notes:{say:'What we just did in Riscville is basically governance. We did not write a giant policy. We classified work based on what it involved and what safeguards it needed.',ask:'Could your employees remember Green, Yellow, and Red more easily than a fourteen-page acceptable-use policy?',reveal:'Walk quickly through Green, Yellow, and Red using the Riscville examples they just experienced.',land:'A guardrail says "use AI here under these conditions." A roadblock just says "do not."'}},
 
 {id:'six-questions',type:'slide',min:1,kicker:'BEFORE YOU WRITE THE POLICY',title:'Six Questions Your Organization Must Answer',priority:'runiftime',
  bullets:['Which tools are approved?','What data can be used, and what can\'t?','What requires human review before it goes out?','What uses are prohibited outright?','Who remains accountable when AI is involved?','How are new tools evaluated before they\'re approved?'],
  callout:'A policy document can\'t answer questions your organization has never discussed.',
- notes:{land:'Read these fast — they set up the policy-builder vote coming up.'}},
+ notes:{say:'If you are building AI policy, I would not start by asking someone to draft the policy document. Start by answering these six questions as an organization.',ask:'Which one of these would create the most disagreement in your organization today?',reveal:'Move through the six questions quickly. Do not over-explain each one.',land:'A policy cannot clarify decisions leadership has never actually made.'}},
 
 {id:'four-question-guardrail',type:'slide',min:1,kicker:'BEFORE YOU HIT SUBMIT',title:'The Four-Question Guardrail',priority:'must',
  bullets:['DATA — what am I giving it? (Would I be comfortable if this leaked?)','DECISION — what am I asking it to do? (Assist, or actually decide?)','ENVIRONMENT — where is the information going? (Approved tool, or a personal account?)','DOUBLE-CHECK — what must a human verify before this goes out?'],
  callout:'If employees remember nothing else, remember these four questions.',
- notes:{land:'This is the single most portable takeaway of the whole session.'}},
+ notes:{say:'If I had to reduce this entire session to something an employee could remember tomorrow morning, it would be these four questions.',ask:'Before you put something consequential into AI: What am I giving it? What am I asking it to do? Where is that information going? What does a human still need to verify?',reveal:'Read the four labels once, then explain the parenthetical examples only if time allows.',land:'Data. Decision. Environment. Double-check. If people remember those four, they are already making better AI choices.'}},
 
 {id:'mission1-intro',type:'slide',min:1,kicker:'YOUR FIRST AI MISSION',title:'A City Manager Just Handed You a Problem',priority:'runiftime',
  bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you give it the job, and everyone votes on what happens next'],
- notes:{say:'Transition into the Press Release mission.'}},
+ notes:{say:'We have talked about giving AI the right role. Now you are actually going to do it. This time I am not writing the prompt for you.',ask:'Grab your phone. You are now the communications team.',land:'The challenge is not to write clever AI language. The challenge is to give AI a good job.'}},
 
 {id:'m-press',type:'scenario',min:6,label:'Mission 1 · The Press Release',priority:'must',
  setup:'A department head asks your communications team to let AI write a press release about a new city infrastructure grant. They send over a one-paragraph summary and tell you to make it a full release. The department head says they will approve it with a quick read.',
@@ -639,15 +640,15 @@ const DECK = [
  pFrame:{A:'You picked the fast path — get it out with a quick read and move on. That instinct is exactly how the rounded grant amount and invented quote slipped through. Now build an assignment that keeps AI\'s speed without that risk.',
   B:'You picked the safer approach — verify before it goes out. Knowing that\'s the right call and getting AI to actually execute it are two different skills. Let\'s see if you can build the assignment that produces it.',
   C:'You played it safe by skipping AI entirely — understandable, but it cost you speed for a risk that could have been managed differently. Let\'s see if you can build an assignment that gets you the accuracy you wanted without giving up the tool.'},
- notes:{say:'This is your hallucination teaching moment.',ask:'What is the risk in this workflow and how do you manage it?',reveal:'Option A is the trap.',land:'A polished, confident answer isn\'t the same thing as a correct one.'}},
+ notes:{say:'You have one paragraph of source information and leadership wants a full press release. This is exactly the sort of task where AI can save time, and exactly the sort of task where confident invented details can create a mess.',ask:'Which workflow would you choose?',reveal:'If A wins, emphasize that leadership approval does not magically verify facts. If B wins, reinforce that AI handled structure while a human verified claims. If C gets support, acknowledge that it is safe but unnecessarily restrictive.',land:'The value is speed in drafting. The guardrail is verification of facts, numbers, names, and quotes.'}},
 
 {id:'verdict-press',type:'poll',min:1,label:'Would You Use It?',q:'Looking at that press release outcome — would you use this workflow?',priority:'optional',
  opts:[{id:'A',txt:'✅ USE IT — ready with normal review',g:{human:1}},{id:'B',txt:'✏️ REVIEW IT — helpful, but needs work',g:{human:2}},{id:'C',txt:'🚫 DON\'T USE IT — not appropriate or trustworthy',g:{human:-1}}],
- notes:{ask:'Would you use this workflow?',land:'Quick gut-check poll, no reveal needed — the split itself is the discussion.'}},
+ notes:{say:'Now that you have seen what that workflow actually produces, give me your gut reaction.',ask:'Would you use it?',reveal:'Do not declare a correct answer. Use the distribution to ask one or two people what would make them move from REVIEW IT to USE IT.',land:'Trust is not binary. Often the question is what review makes the output usable.'}},
 
 {id:'sl-model',type:'slide',min:1,kicker:'CHOOSING THE RIGHT MODEL, LIVE',title:'⚡ Fast vs. 🧠 Deep — Under Time Pressure',priority:'runiftime',
  bullets:['Same principle as Claude Sonnet vs. Claude Opus','Choosing a model is part of choosing a level of risk','Watch for which option in the next mission is genuinely fast, and which one just feels fast'],
- notes:{say:'Segue into the Water Main Break mission.'}},
+ notes:{say:'Now let\'s bring the model question back. Sometimes the wrong AI choice is not unsafe because the model is bad. It is unsafe because it is wrong for the moment.',ask:'What happens when the best answer arrives after the decision window has already closed?',land:'Capability has to be matched to urgency, consequence, and the job in front of you.'}},
 
 {id:'m-water',type:'scenario',min:6,label:'Mission 2 · The Water Main Break',priority:'must',
  setup:'A major water main has broken in a residential neighborhood. Repairs will take 6 to 8 hours. Residents have no water. Your team has one person on duty and is being flooded with calls. Leadership wants something out in the next 10 minutes.',
@@ -662,44 +663,47 @@ const DECK = [
  pFrame:{A:'You picked the thorough plan — solid instinct, wrong moment. A 22-minute review missed the 10-minute window entirely. Let\'s see if you can build an assignment that gets you something usable fast, without skipping the review step.',
   B:'You picked speed with a human check before posting — that\'s the balance that actually worked. Knowing that\'s the right call and getting AI to execute it well are different skills. Let\'s see if you can build the assignment that produces it.',
   C:'You picked pure speed with no review — that\'s exactly what let two inaccurate timelines go out unchecked. Let\'s see if you can build an assignment that keeps the speed but adds the guardrail that was missing.'},
- notes:{say:'Frame this live as: which option is FAST, which is DEEP, which is reckless speed.',ask:'What is the best use of AI right now?',land:'Right AI, right job beats both good-AI-wrong-job and fast-AI-no-guardrail.'}},
+ notes:{say:'Riscville has a major water main break. Residents have no water, the phones are blowing up, one person is on duty, and leadership wants something public in ten minutes.',ask:'What is the best use of AI right now?',reveal:'A is GOOD AI, WRONG JOB. B is RIGHT AI, RIGHT JOB. C is FAST AI, NO GUARDRAIL. Emphasize that all three involve capable AI. The workflow is what changes.',land:'The best AI is not always the deepest model. It is the right capability, used for the right job, with the right human check.'}},
 
 {id:'verdict-water',type:'poll',min:1,label:'Would You Use It?',q:'And that holding statement — would you use this workflow?',priority:'optional',
  opts:[{id:'A',txt:'✅ USE IT',g:{human:1}},{id:'B',txt:'✏️ REVIEW IT',g:{human:2}},{id:'C',txt:'🚫 DON\'T USE IT',g:{human:-1}}],
- notes:{ask:'Would you use this workflow?',land:'Quick gut-check, move straight into policy building.'}},
+ notes:{say:'Same gut check as before.',ask:'Would you actually use this holding-statement workflow during a real emergency?',reveal:'If REVIEW IT dominates, point out that review is built into the recommended workflow already. Ask what additional review people would need.',land:'Fast does not have to mean reckless.'}},
 
 {id:'sl-policy',type:'slide',min:1,kicker:'BUILD IT TOGETHER',title:'Let\'s Build YOUR AI Policy',priority:'runiftime',
  bullets:['Your answers to the next four questions become the room\'s principles','No right answers — just decisions','Reasonable organizations land in different places on these, and that\'s fine'],
- notes:{say:'Set up the 4 policy questions.'}},
+ notes:{say:'You have spent the last forty-something minutes making AI governance decisions without calling them policy decisions. Now I want to turn those instincts into something concrete.',ask:'You are going to answer four questions. The room\'s answers will become the principles we generate at the end.',land:'We are not looking for universal rules. We are trying to make organizational choices explicit.'}},
 
 {id:'pq1',type:'policy',min:1,label:'Policy Question 1/4',q:'Should employees be limited to organization-approved AI tools?',priority:'must',
- opts:[{id:'A',txt:'Yes — approved tools only'},{id:'B',txt:'Approved tools for work data; anything for brainstorming'},{id:'C',txt:'No restriction — employee judgment'}]},
+ opts:[{id:'A',txt:'Yes — approved tools only'},{id:'B',txt:'Approved tools for work data; anything for brainstorming'},{id:'C',txt:'No restriction — employee judgment'}],
+ notes:{say:'First question: tool approval. This is really a question about how much control the organization wants over the environment where work happens.',ask:'Should employees be limited to organization-approved AI tools?',reveal:'Comment briefly on whether the room favors centralized control or employee discretion.',land:'An approved-tools rule only works if employees also have useful approved tools.'}},
 {id:'pq2',type:'policy',min:1,label:'Policy Question 2/4',q:'Which AI outputs require human review before they\'re used?',priority:'must',
- opts:[{id:'A',txt:'Everything, every time'},{id:'B',txt:'Only Yellow/Red-level work — data, HR, legal, high-impact decisions'},{id:'C',txt:'Only autonomous high-impact decisions'}]},
+ opts:[{id:'A',txt:'Everything, every time'},{id:'B',txt:'Only Yellow/Red-level work — data, HR, legal, high-impact decisions'},{id:'C',txt:'Only autonomous high-impact decisions'}],
+ notes:{say:'Next is human review. Requiring review of everything sounds safe, but it can also make low-risk AI work unnecessarily cumbersome.',ask:'Which AI outputs actually require human review before they are used?',reveal:'Look for whether the room chooses universal review or risk-based review.',land:'Human oversight should be proportional to consequence, not automatically identical for every task.'}},
 {id:'pq3',type:'policy',min:1,label:'Policy Question 3/4',q:'Where\'s the line for sensitive organizational information?',priority:'must',
- opts:[{id:'A',txt:'Never leaves an approved, org-controlled environment'},{id:'B',txt:'Anonymized or aggregated data is fine anywhere'},{id:'C',txt:'Case-by-case, based on who\'s asking'}]},
+ opts:[{id:'A',txt:'Never leaves an approved, org-controlled environment'},{id:'B',txt:'Anonymized or aggregated data is fine anywhere'},{id:'C',txt:'Case-by-case, based on who\'s asking'}],
+ notes:{say:'This is the data question, and probably one of the most important ones your organization needs to answer clearly.',ask:'Where is the line for sensitive organizational information?',reveal:'If the vote is split, explicitly say that this is exactly the kind of disagreement a real policy process needs to surface.',land:'If employees do not know where sensitive data may go, they are being asked to guess.'}},
 {id:'pq4',type:'policy',min:1,label:'Policy Question 4/4',q:'Does using AI transfer accountability away from the employee who used it?',priority:'must',
  opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}],
- notes:{reveal:'Expect close to unanimous NO.',land:'That sets up the closing beautifully.'}},
+ notes:{say:'Last one, and I suspect this room may be fairly united on it.',ask:'Does using AI transfer accountability away from the employee who used it?',reveal:'Let the result sit. If NO dominates, say: "There is our anchor."',land:'AI can assist the work. It does not absorb responsibility for the work.'}},
 
 {id:'policy-reveal',type:'policy-reveal',min:3,label:'Your Room\'s AI Principles',priority:'must',
- notes:{reveal:'Click "Generate Room\'s AI Principles" in the panel below once all 4 policy votes are in.'}},
+ notes:{say:'You just gave us four governance decisions. Now we are going to let AI do something it is actually very good at: synthesize those decisions into a usable first draft.',ask:'As these principles generate, look for where the room had consensus and where the wording reflects tension.',reveal:'Click "Generate Room\'s AI Principles" in the panel below once all 4 policy votes are in. Read only the strongest 2 or 3 principles aloud, not every line.',land:'The generated document is not the policy. The value is that the room had the conversations required before a policy can mean anything.'}},
 
 {id:'health-reveal',type:'health-reveal',min:2,label:'How Did We Balance AI?',priority:'optional',
- notes:{say:'Reveal the four gauges.',land:'Talk through how the room balanced innovation against caution across the whole hour.'}},
+ notes:{say:'Throughout the session your choices have also been quietly moving four gauges: Innovation, Data Stewardship, Reliability, and Human Control.',ask:'Looking at this balance, what did this room seem to prioritize?',reveal:'Call out the highest and lowest dimensions. Treat the numbers as a simulation, not a scientific score.',land:'Responsible AI is not about maximizing one dimension. It is about balancing useful innovation with appropriate control.'}},
 
 {id:'pulse-close',type:'poll',min:1,label:'Final Pulse Check',setup:'Same four options as when we started —',q:'How are you feeling about AI now?',priority:'must',
  opts:[{id:'A',txt:'😬 Mostly concerned'},{id:'B',txt:'🤔 Interested, but cautious'},{id:'C',txt:'👍 Already using it'},{id:'D',txt:'🚀 Give me all the AI'}],
- notes:{ask:'How are you feeling about AI now?',reveal:'Compare live results to the opening pulse check out loud.',land:'That shift IS part of the closing argument.'}},
+ notes:{say:'We started here, so I want to ask exactly the same question again.',ask:'How are you feeling about AI now?',reveal:'Compare the opening and closing distributions. Do not imply that moving toward enthusiasm is automatically better.',land:'The goal was never to make everyone more excited about AI. More informed caution is still progress.'}},
 
 {id:'pulse-close-2',type:'poll',min:1,label:'Final Pulse Check — Readiness',q:'How prepared do you feel to make AI decisions in your organization?',priority:'must',
  opts:[{id:'A',txt:'😬 Not prepared'},{id:'B',txt:'🤔 I know what questions to ask'},{id:'C',txt:'👍 I could help establish guardrails'},{id:'D',txt:'🚀 I\'m ready to lead the conversation'}],
- notes:{ask:'How prepared do you feel to make AI decisions in your organization?',land:'This measures what the session actually changed — confidence and literacy, not enthusiasm. This is your real conference metric.'}},
+ notes:{say:'This second question matters more to me than whether you personally like AI.',ask:'How prepared do you feel to make AI decisions in your organization?',reveal:'Let the result build. If most people land in the middle two categories, frame that as success: knowing the questions and being able to help establish guardrails.',land:'AI literacy is not knowing every model name. It is being able to ask the right questions and make responsible decisions.'}},
 
 {id:'closing',type:'slide',min:1,kicker:'CLOSING',title:'Know the Tool. Know the Edges. Build the Guardrails.',priority:'must',
  bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment','None of this requires you to be an AI expert — it requires you to be clear about where the line is'],
  callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',
- notes:{say:'Point to resources / QR for the session hub.',land:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible. Thank the room.'}},
+ notes:{say:'You do not have to become an AI expert to help your organization use AI responsibly. Know what tool you are using. Know where its edges are. Establish clear guardrails. Then give people room to experiment inside them.',ask:'As you go back to your organization, what is one AI boundary or decision that needs to become clearer?',reveal:'Point back to the resource QR and remind them that the frameworks and session materials are available there.',land:'Good guardrails do not prevent experimentation. They make responsible experimentation possible. Thank you.'}},
 
 {id:'thank-you',type:'slide',min:3,kicker:'THANK YOU',title:'Questions?',priority:'must',
  bullets:['Reach out anytime — happy to talk AI governance, guardrails, or how this session was built.'],
@@ -1131,7 +1135,11 @@ function renderProjector(){
     let html=`<div class="slide-kicker">${esc(seg.kicker||'')}</div><div class="slide-title">${esc(seg.title||'')}</div>`;
     if(seg.columns){ html+=`<div class="slide-cols">${seg.columns.map(c=>`<div class="slide-col"><h3>${esc(c.h)}</h3><p>${esc(c.d)}</p></div>`).join('')}</div>`; }
     if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
-    if(seg.images){ html+=`<div class="slide-images">${seg.images.map(src=>`<img src="${esc(src)}" alt="Model comparison"/>`).join('')}</div>`; }
+    if(seg.imageRows){
+      html+=`<div class="slide-images">${seg.imageRows.map(row=>`<div class="img-row">${row.map(src=>`<img src="${esc(src)}" alt="Model comparison"/>`).join('')}</div>`).join('')}</div>`;
+    } else if(seg.images){
+      html+=`<div class="slide-images">${seg.images.map(src=>`<div class="img-row"><img src="${esc(src)}" alt="Model comparison"/></div>`).join('')}</div>`;
+    }
     if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
     if(seg.presenter || seg.presenterTitle || seg.showQR){
       const contact=[seg.presenterPhone,seg.presenterEmail].filter(Boolean).join('  ·  ');
