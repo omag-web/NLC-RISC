@@ -809,6 +809,7 @@ async function broadcastPolicyResult(text){ policyResult=text; if(!stateChannel)
    ══════════════════════════════════════════════════════════════ */
 const OPT_COLORS=['opt-A','opt-B','opt-C','opt-D'];
 let _rendered={};
+let _lastProjBarsFor=null; // tracks which segment id's #proj-bars-inner is currently mounted (it gets destroyed whenever any other branch of renderProjector runs)
 function renderLiveBars(containerId,segIdx,large=false){
   const seg=DECK[segIdx]; const el=$(containerId); if(!el||!seg.opts) return;
   const key=containerId+':'+segIdx;
@@ -1092,6 +1093,7 @@ function renderProjector(){
   const footerQR=$('proj-footer-qr'); if(footerQR) footerQR.style.display = seg.showQR ? 'none' : 'inline-block';
 
   if(seg.type==='slide'){
+    _lastProjBarsFor=null;
     let html=`<div class="slide-kicker">${esc(seg.kicker||'')}</div><div class="slide-title">${esc(seg.title||'')}</div>`;
     if(seg.columns){ html+=`<div class="slide-cols">${seg.columns.map(c=>`<div class="slide-col"><h3>${esc(c.h)}</h3><p>${esc(c.d)}</p></div>`).join('')}</div>`; }
     if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
@@ -1110,15 +1112,21 @@ function renderProjector(){
     }
     body.innerHTML=html; body.style.justifyContent='flex-start';
   } else if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy'){
-    body.style.justifyContent='center';
-    body.innerHTML=`<div class="proj-input-badge">📱 Grab your phone — vote now</div><div class="proj-q">${esc(seg.q||seg.item||'')}</div><div id="proj-bars-inner"></div>`;
+    if(_lastProjBarsFor!==seg.id){
+      body.style.justifyContent='center';
+      body.innerHTML=`<div class="proj-input-badge">📱 Grab your phone — vote now</div><div class="proj-q">${esc(seg.q||seg.item||'')}</div><div id="proj-bars-inner"></div>`;
+      delete _rendered['proj-bars-inner:'+S.idx]; // force a fresh full render into the newly-created container
+      _lastProjBarsFor=seg.id;
+    }
     renderLiveBars('proj-bars-inner',S.idx,true);
   } else if(seg.type==='policy-reveal'){
+    _lastProjBarsFor=null;
     body.style.justifyContent='center';
     body.innerHTML = policyResult
       ? `<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">📜 Your Room's AI Principles</div><div style="font-family:var(--body);font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text2);line-height:1.9;white-space:pre-line;">${esc(policyResult)}</div>`
       : `<div class="watch-card"><div class="disp cyan" style="font-size:1rem;letter-spacing:.1em;">WAITING FOR FACILITATOR TO GENERATE...</div></div>`;
   } else if(seg.type==='health-reveal'){
+    _lastProjBarsFor=null;
     body.style.justifyContent='center';
     body.innerHTML=`<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">How Did We Balance AI?</div><div class="gauge-row" id="gauge-row-inner"></div>`;
     renderGaugesInto('gauge-row-inner',false);
