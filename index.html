@@ -346,14 +346,20 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <p style="font-size:.88rem;color:var(--text2);line-height:1.65;" id="prompt-frame-text"></p>
   </div>
   <div class="panel bkt w">
-    <div class="slabel">YOUR MISSION</div>
+    <div class="slabel" id="prompt-mission-label">YOUR MISSION</div>
     <p style="font-size:.92rem;color:var(--text2);line-height:1.72;" id="prompt-task"></p>
   </div>
   <div class="w">
-    <div class="slabel">YOUR ASSIGNMENT</div>
+    <div class="slabel" id="prompt-assignment-label">YOUR ASSIGNMENT</div>
     <textarea class="ta" id="prompt-ta" placeholder="Type the assignment you'd give AI here…" rows="5"></textarea>
   </div>
   <button class="btn btn-p btn-full" id="btn-submit">Assign It</button>
+  <div id="collect-thanks" style="display:none;flex-direction:column;align-items:center;gap:.7rem;padding:1.5rem;text-align:center;">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+    <div class="disp green-c" style="font-size:.9rem;letter-spacing:.1em;">SENT TO THE FACILITATOR</div>
+    <div class="mono muted" style="font-size:.7rem;">Thanks — we may run yours live in a minute.</div>
+    <button class="btn btn-o" id="btn-collect-back" style="margin-top:.5rem;">← Back to Console</button>
+  </div>
   <div id="eval-panel" style="display:none;flex-direction:column;gap:.9rem;width:100%;">
     <div id="eval-analyzing" style="display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1.5rem;">
       <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
@@ -435,6 +441,14 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <div id="fac-policy-action" style="display:none;margin-top:.8rem;">
       <button class="btn btn-p" id="btn-generate-policy">⚡ Generate Room's AI Principles</button>
     </div>
+  </div>
+
+  <div class="panel" id="fac-bonus-panel" style="display:none;">
+    <div class="slabel">BONUS ROUND CONTROL</div>
+    <div class="mono muted" style="font-size:.65rem;margin-bottom:.7rem;">Pick a submission below (or type your own), then Load &amp; Launch to send it to the room.</div>
+    <div class="subs" id="fac-bonus-subs" style="max-height:180px;margin-bottom:.8rem;"></div>
+    <textarea class="ta" id="fac-bonus-ta" placeholder="Or type/paste a dilemma directly…" rows="3"></textarea>
+    <button class="btn btn-p btn-full" id="btn-bonus-launch" style="margin-top:.6rem;">⚡ Load &amp; Launch to Room</button>
   </div>
 
   <div class="panel">
@@ -623,6 +637,23 @@ const DECK = [
  callout:'If employees remember nothing else, remember these four questions.',
  notes:{say:'If I had to reduce this entire session to something an employee could remember tomorrow morning, it would be these four questions.',ask:'Before you put something consequential into AI: What am I giving it? What am I asking it to do? Where is that information going? What does a human still need to verify?',reveal:'Read the four labels once, then explain the parenthetical examples only if time allows.',land:'Data. Decision. Environment. Double-check. If people remember those four, they are already making better AI choices.'}},
 
+{id:'bonus-collect',type:'collect',min:2,label:'Submit YOUR Real AI Dilemma',priority:'optional',
+ pTask:'Think of a real AI question or gray area from your own job — something you\'ve actually wondered about. Describe it in a sentence or two.',
+ noEval:true,missionLabel:'YOUR REAL DILEMMA',assignmentLabel:'DESCRIBE IT',assignmentPlaceholder:'e.g. Can I paste a resident complaint into AI to draft a response?',submitLabel:'Send It In',
+ notes:{say:'This is the bonus round — only run it if you\'re genuinely ahead of schedule. Skip straight past it otherwise.',ask:'Think of a real AI gray area from your own job. Type it in.',land:'These get collected in your console — you\'ll pick 2-3 to run live as the next few items.'}},
+
+{id:'bonus-vote-1',type:'bonus-traffic',min:2,label:'Bonus Round 1 — The Room\'s Dilemma',priority:'optional',
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:{say:'Pick one submission from the console below and hit Load & Launch before advancing here.',ask:'Green, Yellow, or Red?',reveal:'There\'s no scripted answer this time — ask the room why they voted the way they did. That discussion is the whole point.',land:'The framework only proves itself if it works on a real, messy example.'}},
+
+{id:'bonus-vote-2',type:'bonus-traffic',min:2,label:'Bonus Round 2 — The Room\'s Dilemma',priority:'optional',
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:{say:'Load a second submission if you\'re still ahead on time.',ask:'Green, Yellow, or Red?',reveal:'Same as before — genuine discussion, no answer key.',land:'Notice if the room disagrees more on real examples than the scripted ones.'}},
+
+{id:'bonus-vote-3',type:'bonus-traffic',min:2,label:'Bonus Round 3 — The Room\'s Dilemma',priority:'optional',
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:{say:'Third and last bonus slot — only if the room still has energy for it.',ask:'Green, Yellow, or Red?',land:'Wrap this up and move into the missions.'}},
+
 {id:'mission1-intro',type:'slide',min:1,kicker:'YOUR FIRST AI MISSION',title:'A City Manager Just Handed You a Problem',priority:'runiftime',
  bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you give it the job, and everyone votes on what happens next'],
  notes:{say:'We have talked about giving AI the right role. Now you are actually going to do it. This time I am not writing the prompt for you.',ask:'Grab your phone. You are now the communications team.',land:'The challenge is not to write clever AI language. The challenge is to give AI a good job.'}},
@@ -799,6 +830,13 @@ async function connectAbly(key){
     stateChannel.subscribe('segment',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number' && idx!==S.idx){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
     stateChannel.subscribe('current',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number'){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
     stateChannel.subscribe('policyResult',msg=>{ policyResult=msg.data?.text||null; if($('projector-screen').classList.contains('active')) renderProjector(); if($('facilitator').classList.contains('active')) renderFacPreview(); });
+    stateChannel.subscribe('bonusContent',msg=>{
+      const {segId,text}=msg.data||{}; if(!segId) return;
+      bonusContent[segId]=text; _lastProjBarsFor=null;
+      if(IS_PROJECTOR){ renderProjector(); }
+      else if(IS_FACILITATOR){ renderFacPreview(); }
+      else if(DECK[S.idx] && DECK[S.idx].id===segId){ onSegmentChanged(); }
+    });
 
     voteChannel.subscribe('vote',msg=>{
       const {segId,opt,gauge}=msg.data||{};
@@ -811,7 +849,11 @@ async function connectAbly(key){
     voteChannel.subscribe('prompt',msg=>{
       const entry=msg.data; if(!entry||!entry.sid||!entry.txt) return;
       const exists=S.prompts.some(p=>p.ts===entry.ts && p.txt===entry.txt);
-      if(!exists){ S.prompts.push(entry); save(); if($('facilitator').classList.contains('active')) renderSubs(); }
+      if(!exists){
+        S.prompts.push(entry); save();
+        if($('facilitator').classList.contains('active')) renderSubs();
+        if($('projector-screen').classList.contains('active') && DECK[S.idx] && DECK[S.idx].id===entry.sid) renderProjector();
+      }
     });
 
     setTimeout(()=>{ stateChannel.publish('hello',{ts:Date.now()}); },1000);
@@ -841,6 +883,7 @@ async function broadcastPolicyResult(text){ policyResult=text; if(!stateChannel)
 const OPT_COLORS=['opt-A','opt-B','opt-C','opt-D'];
 let _rendered={};
 let _lastProjBarsFor=null; // tracks which segment id's #proj-bars-inner is currently mounted (it gets destroyed whenever any other branch of renderProjector runs)
+let bonusContent={}; // bonusContent[segId] = the real audience dilemma text the facilitator loaded into that bonus-round slot
 function renderLiveBars(containerId,segIdx,large=false){
   const seg=DECK[segIdx]; const el=$(containerId); if(!el||!seg.opts) return;
   const key=containerId+':'+segIdx;
@@ -924,8 +967,10 @@ function onStateSynced(){
 function onSegmentChanged(){
   const seg=DECK[S.idx];
   if(!seg) return;
-  if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy'){
+  if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='bonus-traffic' || seg.type==='poll' || seg.type==='policy'){
     loadSegment(S.idx); showScreen('segment');
+  } else if(seg.type==='collect'){
+    loadPrompt(); showScreen('prompt-screen');
   } else {
     $('watch-note').textContent = seg.title ? ('Coming up: '+seg.title) : 'Stand by.';
     showScreen('watch');
@@ -936,15 +981,18 @@ function loadSegment(idx){
   const seg=DECK[idx];
   $('sc-label').textContent=seg.type.toUpperCase();
   $('sc-title').textContent=seg.label||seg.title||'';
-  $('sc-setup').textContent=seg.setup||seg.item||'';
+  $('sc-setup').textContent = seg.type==='bonus-traffic' ? (bonusContent[seg.id] || 'Waiting for the facilitator to load a real dilemma from the room...') : (seg.setup||seg.item||'');
   $('sc-q').textContent=seg.q||'';
   const list=$('opts'); list.innerHTML='';
-  (seg.opts||[]).forEach(o=>{
-    const b=document.createElement('button'); b.className='opt-btn'; b.dataset.id=o.id;
-    b.innerHTML=`<span class="opt-letter">OPTION ${o.id}</span><span>${esc(o.txt)}</span>`;
-    b.addEventListener('click',()=>selOpt(o.id));
-    list.appendChild(b);
-  });
+  const bonusWaiting = seg.type==='bonus-traffic' && !bonusContent[seg.id];
+  if(!bonusWaiting){
+    (seg.opts||[]).forEach(o=>{
+      const b=document.createElement('button'); b.className='opt-btn'; b.dataset.id=o.id;
+      b.innerHTML=`<span class="opt-letter">OPTION ${o.id}</span><span>${esc(o.txt)}</span>`;
+      b.addEventListener('click',()=>selOpt(o.id));
+      list.appendChild(b);
+    });
+  }
   $('cons-wrap').style.display='none';
   $('voted-confirm').style.display='none';
   // action buttons vary by type
@@ -1000,10 +1048,15 @@ function loadPrompt(){
   const seg=DECK[S.idx];
   $('prompt-sc-lbl').textContent=seg.label||'';
   $('prompt-task').textContent=seg.pTask||'';
+  $('prompt-mission-label').textContent=seg.missionLabel||'YOUR MISSION';
+  $('prompt-assignment-label').textContent=seg.assignmentLabel||'YOUR ASSIGNMENT';
+  $('prompt-ta').placeholder=seg.assignmentPlaceholder||'Type the assignment you\'d give AI here…';
+  $('btn-submit').textContent=seg.submitLabel||'Assign It';
   const frame = seg.pFrame && S.sel ? seg.pFrame[S.sel] : null;
   if(frame){ $('prompt-frame-panel').style.display='block'; $('prompt-frame-text').textContent=frame; }
   else{ $('prompt-frame-panel').style.display='none'; }
-  $('prompt-ta').value=''; $('prompt-ta').disabled=false; $('btn-submit').disabled=false;
+  $('prompt-ta').value=''; $('prompt-ta').disabled=false; $('btn-submit').disabled=false; $('btn-submit').style.display='inline-flex';
+  $('collect-thanks').style.display='none';
   $('eval-panel').style.display='none'; $('eval-analyzing').style.display='flex'; $('eval-result').style.display='none';
 }
 async function submitPrompt(){
@@ -1013,6 +1066,12 @@ async function submitPrompt(){
   S.prompts.push(entry); save();
   if(voteChannel){ try{ await voteChannel.publish('prompt',entry); }catch(e){} }
   $('btn-submit').disabled=true; $('prompt-ta').disabled=true;
+  if(seg.noEval){
+    $('btn-submit').style.display='none';
+    $('collect-thanks').style.display='flex';
+    toast('SUBMITTED');
+    return;
+  }
   const ep=$('eval-panel'); ep.style.display='flex'; $('eval-analyzing').style.display='flex'; $('eval-result').style.display='none';
   ep.scrollIntoView({behavior:'smooth',block:'start'});
   const statusMsgs=['REVIEWING THE JOB...','CHECKING THE TASK...','CHECKING CONTEXT...','CHECKING BOUNDARIES...','CHECKING VERIFICATION...'];
@@ -1069,7 +1128,7 @@ async function generatePolicy(){
    ══════════════════════════════════════════════════════════════ */
 function toggleSample(){ const b=$('sample-body'),c=$('sample-chevron'); const open=b.style.display==='none'; b.style.display=open?'block':'none'; c.style.transform=open?'rotate(180deg)':'rotate(0deg)'; }
 
-function typeIcon(t){ return {slide:'slide',scenario:'scenario',traffic:'traffic',poll:'traffic',policy:'policy','policy-reveal':'special','health-reveal':'special'}[t]||'slide'; }
+function typeIcon(t){ return {slide:'slide',scenario:'scenario',traffic:'traffic',poll:'traffic',policy:'policy','policy-reveal':'special','health-reveal':'special',collect:'special','bonus-traffic':'traffic'}[t]||'slide'; }
 function renderROS(){
   const list=$('ros-list'); list.innerHTML='';
   const priLabel={must:'MUST RUN',runiftime:'RUN IF ON TIME',optional:'OPTIONAL — CUT FIRST'};
@@ -1087,7 +1146,9 @@ function jumpTo(i){ S.idx=i; S.sel=null; save(); broadcastSegment(i); renderFaci
 function renderFacPreview(){
   const seg=DECK[S.idx];
   $('fac-prev-t').textContent=(seg.label||seg.title||'')+`  ·  [${seg.type}]`;
-  $('fac-prev-s').textContent=seg.setup||seg.item||seg.callout||(seg.bullets?seg.bullets.join(' · '):'');
+  $('fac-prev-s').textContent = seg.type==='bonus-traffic'
+    ? (bonusContent[seg.id] ? ('LOADED: '+bonusContent[seg.id]) : 'Nothing loaded yet — pick a submission below and Load & Launch.')
+    : (seg.setup||seg.item||seg.callout||(seg.bullets?seg.bullets.join(' · '):''));
   const cues = (typeof seg.notes==='string') ? {say:seg.notes} : (seg.notes||null);
   const cueKeys=['say','ask','reveal','land'];
   const anyCue = cues && cueKeys.some(k=>cues[k]);
@@ -1099,10 +1160,33 @@ function renderFacPreview(){
   });
   $('fac-policy-action').style.display = seg.type==='policy-reveal' ? 'block':'none';
   if(seg.type==='policy-reveal' && policyResult){ $('fac-prev-s').textContent = policyResult.split('\n').join(' · '); }
+  $('fac-bonus-panel').style.display = seg.type==='bonus-traffic' ? 'block':'none';
+  if(seg.type==='bonus-traffic') renderBonusSubs();
   $('fac-sample-panel').style.display = seg.pSample ? 'block':'none';
   if(seg.pSample) $('fac-sample').textContent=seg.pSample;
   $('fac-subs-panel').style.display = seg.pTask ? 'block':'none';
   $('fac-gauge-panel').style.display = (seg.type==='health-reveal'||true) ? 'block':'none';
+}
+function renderBonusSubs(){
+  const items=S.prompts.filter(p=>p.sid==='bonus-collect').slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const list=$('fac-bonus-subs');
+  if(!items.length){ list.innerHTML='<div class="empty-st">NO SUBMISSIONS YET — CHECK BACK ONCE THE ROOM HAS SENT SOME IN</div>'; return; }
+  list.innerHTML=items.map((p,i)=>`<div class="sub-item" style="cursor:pointer;" data-bonus-idx="${i}"><div class="sub-meta">${fmtT(p.ts)}</div>${esc(p.txt)}</div>`).join('');
+  qa('[data-bonus-idx]',list).forEach((el,i)=>{
+    el.addEventListener('click',()=>{ $('fac-bonus-ta').value=items[i].txt; });
+  });
+}
+async function launchBonusContent(){
+  const seg=DECK[S.idx]; if(seg.type!=='bonus-traffic') return;
+  const text=$('fac-bonus-ta').value.trim();
+  if(!text){ toast('TYPE OR PICK A DILEMMA FIRST'); return; }
+  bonusContent[seg.id]=text;
+  votes[seg.id]={};
+  _rendered={}; _lastProjBarsFor=null;
+  if(stateChannel){ try{ await stateChannel.publish('bonusContent',{segId:seg.id,text}); }catch(e){} }
+  if(voteChannel){ try{ await voteChannel.publish('snapshot',{votes,gauges}); }catch(e){} }
+  renderFacPreview(); refreshAllLiveUI();
+  toast('LAUNCHED TO ROOM');
 }
 function renderFacilitator(){
   renderROS(); renderFacPreview(); renderSubs();
@@ -1157,14 +1241,20 @@ function renderProjector(){
       </div>`;
     }
     body.innerHTML=html; body.style.justifyContent='flex-start';
-  } else if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy'){
-    if(_lastProjBarsFor!==seg.id){
+  } else if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy' || (seg.type==='bonus-traffic' && bonusContent[seg.id])){
+    const qText = seg.type==='bonus-traffic' ? bonusContent[seg.id] : (seg.q||seg.item||'');
+    const barsKey = seg.id + ':' + qText;
+    if(_lastProjBarsFor!==barsKey){
       body.style.justifyContent='center';
-      body.innerHTML=`<div class="proj-input-badge">📱 Grab your phone — vote now</div><div class="proj-q">${esc(seg.q||seg.item||'')}</div><div id="proj-bars-inner"></div>`;
+      body.innerHTML=`<div class="proj-input-badge">📱 Grab your phone — vote now</div><div class="proj-q">${esc(qText)}</div><div id="proj-bars-inner"></div>`;
       delete _rendered['proj-bars-inner:'+S.idx]; // force a fresh full render into the newly-created container
-      _lastProjBarsFor=seg.id;
+      _lastProjBarsFor=barsKey;
     }
     renderLiveBars('proj-bars-inner',S.idx,true);
+  } else if(seg.type==='bonus-traffic'){
+    _lastProjBarsFor=null;
+    body.style.justifyContent='center';
+    body.innerHTML=`<div class="watch-card"><div class="disp cyan" style="font-size:1rem;letter-spacing:.1em;">WAITING FOR FACILITATOR TO LOAD A DILEMMA...</div></div>`;
   } else if(seg.type==='policy-reveal'){
     _lastProjBarsFor=null;
     body.style.justifyContent='center';
@@ -1180,6 +1270,11 @@ function renderProjector(){
     } else {
       renderGaugesInto('gauge-row-inner',false,true); // already mounted — update widths in place, no re-animate
     }
+  } else if(seg.type==='collect'){
+    _lastProjBarsFor=null;
+    body.style.justifyContent='center';
+    const count=S.prompts.filter(p=>p.sid===seg.id).length;
+    body.innerHTML=`<div class="proj-input-badge">📱 Submit your real AI dilemma now</div><div class="proj-q" style="text-align:center;">What's a real gray area from your own job?</div><div style="font-family:var(--disp);font-size:2.4rem;font-weight:900;color:var(--cyan);text-align:center;">${count}</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--textm);letter-spacing:.12em;text-align:center;text-transform:uppercase;">submitted so far</div>`;
   }
 }
 function toggleFullscreen(){
@@ -1223,6 +1318,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('btn-prompt-back').addEventListener('click',()=>showScreen('segment'));
   $('btn-submit').addEventListener('click',submitPrompt);
   $('btn-back-console2').addEventListener('click',()=>showScreen('watch'));
+  $('btn-collect-back').addEventListener('click',()=>showScreen('watch'));
 
   $('btn-fac-prev').addEventListener('click',()=>jumpTo(Math.max(0,S.idx-1)));
   $('btn-fac-next').addEventListener('click',()=>jumpTo(Math.min(DECK.length-1,S.idx+1)));
@@ -1230,6 +1326,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('btn-fac-reset').addEventListener('click',()=>{ if(!confirm('Reset votes for this item?'))return; broadcastReset(); renderFacilitator(); toast('VOTES RESET'); });
   $('btn-refresh').addEventListener('click',()=>{ renderSubs(); toast('REFRESHED'); });
   $('btn-generate-policy').addEventListener('click',generatePolicy);
+  $('btn-bonus-launch').addEventListener('click',launchBonusContent);
   $('btn-exit-proj').addEventListener('click',()=>{ const fromParam=new URLSearchParams(window.location.search).get('projector')==='true'; if(fromParam) window.close(); else showScreen('facilitator'); });
 
   const urlParams=new URLSearchParams(window.location.search);
