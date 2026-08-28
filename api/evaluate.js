@@ -1,49 +1,1234 @@
-// api/evaluate.js
-// Vercel serverless function — proxies prompt evaluation AND policy generation to Anthropic
-// (both the Prompt Challenge scoring and the "Generate Room's AI Principles" feature
-// call this same endpoint with different systemPrompt/userPrompt pairs)
-// Place this file at: api/evaluate.js in your GitHub repo root
-// Set ANTHROPIC_API_KEY in Vercel environment variables
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  const { systemPrompt, userPrompt } = req.body;
-  if (!systemPrompt || !userPrompt) {
-    return res.status(400).json({ error: 'Missing systemPrompt or userPrompt' });
-  }
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'API key not configured on server' });
-  }
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',  // fast + cheap for conference use
-        max_tokens: 550,  // trimmed from 1000 for live-event throughput — the JSON response doesn't need more, and this roughly doubles how many submissions can complete per minute under a Tier 1 account's output-token rate limit
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }]
-      })
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>AI Control Room · NLC-RISC 2026</title>
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+:root {
+  --bg:#020617; --bg-panel:#060f1e; --bg-card:#0a1628;
+  --cyan:#00e5ff; --cyan-dim:#0097a7; --blue:#2196f3;
+  --purple:#7c3aed; --amber:#f59e0b; --red:#ef4444; --green:#10b981;
+  --text:#e2f4ff; --text2:#8bb8d4; --textm:#3d6480;
+  --border:rgba(0,229,255,0.14); --borderg:rgba(0,229,255,0.45);
+  --gcyan:0 0 28px rgba(0,229,255,0.32),0 0 70px rgba(0,229,255,0.1);
+  --gamber:0 0 22px rgba(245,158,11,0.45);
+  --r:8px; --rl:14px;
+  --mono:'Share Tech Mono','Courier New',monospace;
+  --disp:'Orbitron','Courier New',monospace;
+  --body:'Rajdhani','Arial',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;}
+body{background-color:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;
+  background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);background-size:44px 44px;}
+body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;background:linear-gradient(transparent,var(--cyan),transparent);opacity:.12;animation:scan 9s linear infinite;pointer-events:none;z-index:9999;}
+@keyframes scan{0%{top:-5%}100%{top:105%}}
+.screen{display:none;min-height:100vh;padding:1.75rem 1rem 3rem;flex-direction:column;align-items:center;max-width:680px;margin:0 auto;}
+.screen.active{display:flex;animation:up .42s ease both;}
+@keyframes up{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
+#boot{position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;transition:opacity .7s;}
+#boot.out{opacity:0;pointer-events:none;}
+.btitle{font-family:var(--disp);font-size:.72rem;color:var(--cyan);letter-spacing:.25em;}
+.bbar-wrap{width:260px;height:2px;background:rgba(0,229,255,.14);border-radius:2px;overflow:hidden;}
+.bbar-fill{height:100%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);width:0%;transition:width .14s linear;}
+.blog{font-family:var(--mono);font-size:.65rem;color:var(--textm);letter-spacing:.06em;max-width:310px;width:100%;}
+.bline{opacity:0;margin-bottom:.16rem;animation:bl .28s ease forwards;}
+.bline.ok::after{content:' [OK]';color:var(--green);}
+@keyframes bl{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+#toast{position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-card);border:1px solid var(--cyan);border-radius:var(--r);padding:.6rem 1.2rem;font-family:var(--mono);font-size:.7rem;color:var(--cyan);letter-spacing:.08em;box-shadow:var(--gcyan);z-index:9998;transition:transform .33s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+.mono{font-family:var(--mono);} .disp{font-family:var(--disp);}
+.cyan{color:var(--cyan);} .dim{color:var(--text2);} .muted{color:var(--textm);}
+.amber{color:var(--amber);} .green-c{color:var(--green);}
+.badge{display:inline-flex;align-items:center;gap:.42rem;font-family:var(--mono);font-size:.65rem;color:var(--cyan);letter-spacing:.14em;padding:.26rem .7rem;border:1px solid var(--border);border-radius:2px;background:rgba(0,229,255,.05);white-space:nowrap;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--cyan)}50%{opacity:.3;box-shadow:0 0 2px var(--cyan)}}
+.ticker{font-family:var(--mono);font-size:.65rem;color:var(--textm);letter-spacing:.08em;min-height:.9rem;}
+.ticker span{display:inline-block;animation:ti .38s ease;}
+@keyframes ti{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+.w{width:100%;} .col{display:flex;flex-direction:column;}
+.row{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;}
+.between{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem;flex-wrap:wrap;}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--rl);padding:1.35rem;width:100%;position:relative;}
+.panel.glow{box-shadow:var(--gcyan);}
+.bkt::before,.bkt::after{content:'';position:absolute;width:13px;height:13px;border-color:var(--cyan);border-style:solid;opacity:.55;}
+.bkt::before{top:0;left:0;border-width:2px 0 0 2px;}
+.bkt::after{bottom:0;right:0;border-width:0 2px 2px 0;}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan-dim),transparent);opacity:.35;margin:1rem 0;}
+.slabel{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;color:var(--textm);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:.38rem;margin-bottom:.65rem;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.42rem;font-family:var(--disp);font-size:.7rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;padding:.82rem 1.6rem;border:none;border-radius:var(--r);cursor:pointer;transition:all .2s ease;min-height:48px;white-space:nowrap;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden;line-height:1;}
+.btn::after{content:'';position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .12s;}
+.btn:active::after{opacity:.07;}
+.btn-p{background:linear-gradient(135deg,var(--cyan-dim),var(--blue));color:#fff;box-shadow:0 0 24px rgba(0,229,255,.2),inset 0 1px 0 rgba(255,255,255,.12);}
+.btn-p:hover{box-shadow:0 0 44px rgba(0,229,255,.48),inset 0 1px 0 rgba(255,255,255,.18);transform:translateY(-1px);}
+.btn-o{background:transparent;color:var(--cyan);border:1px solid var(--borderg);}
+.btn-o:hover{background:rgba(0,229,255,.08);box-shadow:var(--gcyan);}
+.btn-g{background:transparent;color:var(--text2);border:1px solid var(--border);font-size:.62rem;padding:.52rem 1.05rem;min-height:36px;}
+.btn-g:hover{border-color:var(--cyan);color:var(--cyan);}
+.btn-d{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.28);}
+.btn-d:hover{background:rgba(239,68,68,.22);}
+.btn-full{width:100%;} .btn:disabled{opacity:.36;cursor:not-allowed;} .btn:disabled:hover{transform:none;box-shadow:none;}
+.btn-sm{font-size:.6rem;padding:.42rem .85rem;min-height:32px;}
+.opt-btn{display:block;width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:.95rem 1.15rem;text-align:left;cursor:pointer;transition:all .2s ease;color:var(--text);font-family:var(--body);font-size:.94rem;line-height:1.5;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+.opt-letter{font-family:var(--disp);font-size:.62rem;font-weight:700;color:var(--cyan);letter-spacing:.1em;display:block;margin-bottom:.22rem;}
+.opt-btn:hover{border-color:var(--cyan);background:rgba(0,229,255,.06);transform:translateX(3px);}
+.opt-btn.sel{border-color:var(--cyan);background:rgba(0,229,255,.1);box-shadow:var(--gcyan);}
+.opt-btn.sel::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+.opt-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.pg-wrap{margin-bottom:.8rem;}
+.pg-label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.7rem;color:var(--text2);margin-bottom:.32rem;}
+.pg-track{height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.pg-fill{height:100%;border-radius:4px;width:0%;transition:width 1s cubic-bezier(.25,1,.5,1);}
+.fill-c{background:linear-gradient(90deg,var(--cyan-dim),var(--cyan));box-shadow:0 0 10px rgba(0,229,255,.5);}
+.fill-r{background:linear-gradient(90deg,var(--amber),var(--red));box-shadow:0 0 10px rgba(245,158,11,.5);}
+.fill-green{background:linear-gradient(90deg,#059669,var(--green));box-shadow:0 0 10px rgba(16,185,129,.4);}
+.live-bar-wrap{margin-bottom:1.1rem;position:relative;}
+.live-bar-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:.72rem;color:var(--text2);margin-bottom:.4rem;}
+.live-bar-pct{font-family:var(--disp);font-size:1.1rem;font-weight:700;color:var(--cyan);}
+.live-bar-count{font-size:.6rem;color:var(--textm);margin-left:.4rem;}
+.live-track{height:14px;background:rgba(255,255,255,.04);border-radius:7px;overflow:hidden;border:1px solid var(--border);}
+.live-fill{height:100%;border-radius:7px;width:0%;transition:width .7s cubic-bezier(.25,1,.5,1);}
+.live-fill.opt-A{background:linear-gradient(90deg,#0097a7,#00e5ff);box-shadow:0 0 14px rgba(0,229,255,.5);}
+.live-fill.opt-B{background:linear-gradient(90deg,#4c1d95,#7c3aed);box-shadow:0 0 14px rgba(124,58,237,.5);}
+.live-fill.opt-C{background:linear-gradient(90deg,#059669,#10b981);box-shadow:0 0 14px rgba(16,185,129,.5);}
+.live-fill.opt-D{background:linear-gradient(90deg,#b45309,#f59e0b);box-shadow:0 0 14px rgba(245,158,11,.5);}
+.live-fill.leading{filter:brightness(1.15);}
+.live-winner-tag{display:inline-block;font-family:var(--mono);font-size:.55rem;color:var(--amber);letter-spacing:.12em;border:1px solid rgba(245,158,11,.4);border-radius:2px;padding:.1rem .35rem;margin-left:.5rem;vertical-align:middle;}
+.conn-pill{display:inline-flex;align-items:center;gap:.38rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;padding:.22rem .6rem;border-radius:2px;border:1px solid;white-space:nowrap;}
+.conn-pill.connected{color:var(--green);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08);}
+.conn-pill.connecting{color:var(--amber);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08);}
+.conn-pill.disconnected{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);}
+.conn-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.conn-pill.connected .conn-dot{animation:pulse 2s ease-in-out infinite;}
+.conn-pill.connecting .conn-dot{animation:blink .6s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
+.human-banner{display:flex;align-items:center;gap:.65rem;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.35);border-radius:var(--r);padding:.68rem 1rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;color:#a78bfa;text-transform:uppercase;width:100%;}
+.cons-card{background:var(--bg-card);border:1px solid rgba(245,158,11,.22);border-radius:var(--rl);padding:1.35rem;width:100%;position:relative;}
+.cons-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);}
+.risk-num{font-family:var(--disp);font-size:2.35rem;font-weight:900;color:#fff;text-shadow:var(--gamber);line-height:1;}
+@keyframes rev{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.rev1{opacity:0;animation:rev .5s .00s ease forwards;}
+.rev2{opacity:0;animation:rev .5s .17s ease forwards;}
+.rev3{opacity:0;animation:rev .5s .32s ease forwards;}
+.glitch{position:relative;display:inline-block;}
+.glitch::before{content:attr(data-text);position:absolute;inset:0;color:var(--cyan);animation:gl 6s steps(1) infinite;opacity:.52;}
+@keyframes gl{0%{clip-path:inset(0 0 96% 0);transform:translate(-2px)}18%{clip-path:inset(55% 0 22% 0);transform:translate(2px)}36%{clip-path:inset(20% 0 65% 0);transform:translate(-1px)}54%{clip-path:inset(80% 0 4% 0);transform:translate(1px)}72%{clip-path:inset(35% 0 45% 0);transform:translate(-2px)}90%,100%{clip-path:inset(0 0 96% 0);transform:translate(0)}}
+.ta{width:100%;min-height:108px;background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:var(--r);padding:.88rem 1rem;color:var(--text);font-family:var(--mono);font-size:.8rem;line-height:1.6;resize:vertical;outline:none;transition:border-color .2s;}
+.ta:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,229,255,.1);}
+.ta::placeholder{color:var(--textm);}
+.sample-box{background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.22);border-radius:var(--r);padding:.95rem;font-family:var(--mono);font-size:.73rem;color:#c4b5fd;line-height:1.6;}
+#facilitator{max-width:1000px;}
+.nav-back{font-family:var(--mono);font-size:.63rem;color:var(--textm);letter-spacing:.1em;cursor:pointer;border:none;background:none;padding:0;text-transform:uppercase;display:inline-flex;align-items:center;gap:.32rem;transition:color .2s;align-self:flex-start;margin-bottom:.2rem;}
+.nav-back:hover{color:var(--cyan);}
+.fac-sel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:.72rem;padding:.48rem .72rem;outline:none;cursor:pointer;flex:1;min-width:0;}
+.fac-sel:focus{border-color:var(--cyan);}
+.subs{display:flex;flex-direction:column;gap:.45rem;max-height:220px;overflow-y:auto;}
+.sub-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:.65rem .95rem;font-family:var(--mono);font-size:.72rem;color:var(--text2);line-height:1.5;animation:up .3s ease;}
+.sub-meta{font-size:.6rem;color:var(--textm);margin-bottom:.18rem;}
+.empty-st{font-family:var(--mono);font-size:.7rem;color:var(--textm);text-align:center;padding:1.4rem;}
+#landing{gap:1.55rem;text-align:center;padding-top:3.5rem;justify-content:flex-start;}
+.land-eye{font-family:var(--mono);font-size:.63rem;letter-spacing:.25em;color:var(--cyan);text-transform:uppercase;animation:up .6s .3s ease both;}
+.land-title{font-family:var(--disp);font-size:clamp(1.85rem,8vw,3.5rem);font-weight:900;line-height:1.08;letter-spacing:.04em;color:#fff;text-shadow:0 0 44px rgba(0,229,255,.28);animation:up .6s .5s ease both;}
+.land-sub{font-family:var(--body);font-size:.98rem;font-weight:500;color:var(--text2);letter-spacing:.18em;text-transform:uppercase;animation:up .6s .65s ease both;}
+.land-actions{display:flex;flex-direction:column;gap:.85rem;width:100%;max-width:340px;animation:up .6s .85s ease both;}
+.land-meta{display:flex;flex-direction:column;gap:.42rem;align-items:center;animation:up .6s 1.05s ease both;}
+.hex-anim{animation:up .6s .18s ease both;}
+#results-screen{max-width:900px;gap:1.2rem;justify-content:flex-start;padding-top:2rem;}
+.results-header-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;width:100%;}
+.big-vote-count{font-family:var(--disp);font-size:2.2rem;font-weight:900;color:var(--cyan);text-shadow:var(--gcyan);line-height:1;}
+.vote-label{font-family:var(--mono);font-size:.6rem;color:var(--textm);letter-spacing:.15em;margin-top:.1rem;}
+.results-grid{display:grid;grid-template-columns:1fr;gap:1rem;width:100%;}
+#projector-screen{max-width:100%;padding:2.5rem 3rem;gap:1.6rem;background:var(--bg);}
+.proj-title{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.2rem);font-weight:900;color:#fff;letter-spacing:.04em;}
+.proj-q{font-family:var(--disp);font-size:clamp(1.05rem,2.1vw,1.6rem);font-weight:700;color:var(--cyan);letter-spacing:.03em;margin-bottom:.5rem;}
+.proj-input-badge{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.95rem);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:.5rem 1.1rem;margin-bottom:1.1rem;animation:pulse 2s ease-in-out infinite;}
+.proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
+.proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
+.proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
+.proj-qr-block{display:flex;flex-direction:column;align-items:center;gap:.6rem;}
+.proj-presenter{font-family:var(--body);}
+.proj-presenter .name{font-family:var(--disp);font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:700;color:#fff;letter-spacing:.02em;}
+.proj-presenter .title{font-size:clamp(1.05rem,2vw,1.4rem);color:var(--text2);margin-top:.4rem;}
+.proj-presenter .contact{font-family:var(--mono);font-size:clamp(.8rem,1.5vw,1.05rem);color:var(--cyan);margin-top:.7rem;letter-spacing:.02em;}
+.scan-note{font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.9rem);color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;}
+.qr-url-note{font-family:var(--mono);font-size:clamp(.65rem,1.1vw,.85rem);color:var(--text2);letter-spacing:.04em;}
+.proj-bar-wrap{margin-bottom:1.3rem;}
+.proj-bar-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:clamp(.7rem,1.5vw,1rem);color:var(--text2);margin-bottom:.5rem;}
+.proj-bar-pct{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.4rem);font-weight:900;}
+.proj-track{height:26px;background:rgba(255,255,255,.04);border-radius:13px;overflow:hidden;border:1px solid var(--border);}
+.proj-fill{height:100%;border-radius:13px;width:0%;transition:width .8s cubic-bezier(.25,1,.5,1);}
+.proj-fill.opt-A{background:linear-gradient(90deg,#0097a7,#00e5ff);box-shadow:0 0 20px rgba(0,229,255,.4);}
+.proj-fill.opt-B{background:linear-gradient(90deg,#4c1d95,#7c3aed);box-shadow:0 0 20px rgba(124,58,237,.4);}
+.proj-fill.opt-C{background:linear-gradient(90deg,#059669,#10b981);box-shadow:0 0 20px rgba(16,185,129,.4);}
+.proj-fill.opt-D{background:linear-gradient(90deg,#b45309,#f59e0b);box-shadow:0 0 20px rgba(245,158,11,.4);}
+/* slide layout on projector */
+.slide-kicker{font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.9rem);letter-spacing:.28em;color:var(--cyan);text-transform:uppercase;}
+.slide-title{font-family:var(--disp);font-size:clamp(1.7rem,4.4vw,3.1rem);font-weight:900;color:#fff;line-height:1.14;letter-spacing:.01em;margin:.5rem 0 1.1rem;}
+.slide-bullets{list-style:none;display:flex;flex-direction:column;gap:.85rem;width:100%;}
+.slide-bullets li{font-family:var(--body);font-size:clamp(1.05rem,2vw,1.5rem);color:var(--text2);line-height:1.5;padding-left:1.6rem;position:relative;}
+.slide-bullets li::before{content:'▸';position:absolute;left:0;color:var(--cyan);}
+.slide-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.1rem;width:100%;}
+.slide-col{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--rl);padding:1.3rem;}
+.slide-col h3{font-family:var(--disp);font-size:clamp(.95rem,1.6vw,1.2rem);color:var(--cyan);letter-spacing:.08em;margin-bottom:.5rem;}
+.slide-col p{font-family:var(--body);font-size:clamp(.9rem,1.4vw,1.1rem);color:var(--text2);line-height:1.5;}
+.slide-callout{margin-top:auto;font-family:var(--disp);font-size:clamp(1.1rem,2.4vw,1.7rem);font-weight:700;color:var(--amber);text-shadow:var(--gamber);border-top:1px solid var(--border);padding-top:1.2rem;width:100%;}
+.watch-card{display:flex;flex-direction:column;align-items:center;gap:1.2rem;padding:3rem 1rem;text-align:center;}
+.watch-card svg{opacity:.7;}
+/* gauges */
+.gauge-row{display:flex;flex-direction:column;gap:1.3rem;width:100%;}
+.gauge-item{width:100%;}
+.gauge-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--disp);font-size:clamp(.85rem,1.6vw,1.15rem);letter-spacing:.08em;color:var(--text);margin-bottom:.5rem;}
+.gauge-track{height:22px;background:rgba(255,255,255,.04);border-radius:11px;overflow:hidden;border:1px solid var(--border);}
+.gauge-fill{height:100%;border-radius:11px;transition:width 1.1s cubic-bezier(.25,1,.5,1);}
+.gauge-mini{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;}
+.gauge-mini-item{flex:1;min-width:110px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:.5rem .7rem;}
+.gauge-mini-label{font-family:var(--mono);font-size:.55rem;color:var(--textm);letter-spacing:.1em;margin-bottom:.25rem;}
+.gauge-mini-track{height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.gauge-mini-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+/* run of show list */
+.ros-list{display:flex;flex-direction:column;gap:.4rem;max-height:420px;overflow-y:auto;}
+.ros-item{display:flex;align-items:center;gap:.7rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:.55rem .8rem;cursor:pointer;transition:all .15s ease;font-family:var(--mono);font-size:.7rem;color:var(--text2);}
+.ros-item:hover{border-color:var(--cyan-dim);}
+.ros-item.live{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:0 0 14px rgba(0,229,255,.15);color:var(--text);}
+.ros-idx{font-family:var(--disp);font-size:.62rem;color:var(--textm);min-width:22px;}
+.ros-item.live .ros-idx{color:var(--cyan);}
+.ros-type{font-size:.56rem;letter-spacing:.1em;padding:.12rem .4rem;border-radius:2px;border:1px solid var(--border);text-transform:uppercase;flex-shrink:0;}
+.ros-type.slide{color:var(--text2);}
+.ros-type.scenario{color:var(--amber);border-color:rgba(245,158,11,.3);}
+.ros-type.traffic{color:var(--green);border-color:rgba(16,185,129,.3);}
+.ros-type.policy{color:var(--purple);border-color:rgba(124,58,237,.3);}
+.ros-type.special{color:var(--cyan);border-color:rgba(0,229,255,.3);}
+.ros-pri{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ros-pri.must{background:var(--cyan);box-shadow:0 0 6px rgba(0,229,255,.6);}
+.ros-pri.runiftime{background:var(--amber);box-shadow:0 0 6px rgba(245,158,11,.5);}
+.ros-pri.optional{background:transparent;border:1px solid var(--textm);}
+.cue-card{display:flex;gap:.7rem;align-items:flex-start;padding:.55rem 0;border-bottom:1px solid var(--border);}
+.cue-card:last-child{border-bottom:none;}
+.cue-tag{font-family:var(--disp);font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:.18rem .55rem;border-radius:4px;flex-shrink:0;min-width:64px;text-align:center;}
+.cue-tag.say{color:#fff;background:rgba(0,229,255,.18);border:1px solid rgba(0,229,255,.4);}
+.cue-tag.ask{color:var(--amber);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);}
+.cue-tag.reveal{color:#a78bfa;background:rgba(124,58,237,.14);border:1px solid rgba(124,58,237,.4);}
+.cue-tag.land{color:var(--green);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.4);}
+.cue-text{font-size:.86rem;color:var(--text2);line-height:1.55;padding-top:.15rem;}
+.ros-title{flex:1;}
+.ros-min{color:var(--textm);font-size:.6rem;flex-shrink:0;}
+@media(max-width:480px){
+  .panel,.cons-card{padding:1.05rem;}
+  .land-title{font-size:1.95rem;}
+  .between{flex-direction:column;gap:.45rem;}
+  .fac-sel{min-width:100%;}
+  #projector-screen{padding:1.3rem;}
+}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
+    <polygon points="24,4 44,40 4,40" stroke="#00e5ff" stroke-width="1.5" fill="none" opacity=".8"/>
+    <line x1="24" y1="16" x2="24" y2="28" stroke="#00e5ff" stroke-width="2"/>
+    <circle cx="24" cy="33" r="1.8" fill="#00e5ff"/>
+  </svg>
+  <div class="btitle">AI CONTROL ROOM</div>
+  <div class="bbar-wrap"><div class="bbar-fill" id="bbar"></div></div>
+  <div class="blog" id="blog"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ═══ LANDING ═══ -->
+<div class="screen" id="landing">
+  <svg class="hex-anim" width="82" height="82" viewBox="0 0 82 82" fill="none">
+    <polygon points="41,7 73,24 73,58 41,75 9,58 9,24" stroke="#00e5ff" stroke-width="1.3" fill="none" opacity=".5">
+      <animateTransform attributeName="transform" type="rotate" from="0 41 41" to="360 41 41" dur="28s" repeatCount="indefinite"/>
+    </polygon>
+    <polygon points="41,18 62,30 62,52 41,64 20,52 20,30" stroke="#7c3aed" stroke-width=".9" fill="none" opacity=".4">
+      <animateTransform attributeName="transform" type="rotate" from="360 41 41" to="0 41 41" dur="18s" repeatCount="indefinite"/>
+    </polygon>
+    <circle cx="41" cy="41" r="7" fill="none" stroke="#00e5ff" stroke-width="1.6" opacity=".9"/>
+    <circle cx="41" cy="41" r="2.5" fill="#00e5ff"/>
+  </svg>
+  <div class="land-eye">NLC-RISC 2026 · Live Session</div>
+  <h1 class="land-title glitch" data-text="AI CONTROL ROOM">AI CONTROL ROOM</h1>
+  <p class="land-sub">Your organization. Your calls.</p>
+  <div class="badge"><span class="dot"></span>SYSTEM ONLINE</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:.6rem;">
+    <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.18em;color:var(--textm);">SCAN TO JOIN</div>
+    <div style="padding:10px;background:#fff;border-radius:10px;box-shadow:0 0 30px rgba(0,229,255,0.25);display:inline-block;">
+      <img src="images/AI-Interactive-QR.png" alt="Scan to join" style="width:160px;height:160px;display:block;border-radius:4px;"/>
+    </div>
+  </div>
+  <div class="ticker" id="tick0"></div>
+  <div class="land-actions">
+    <button class="btn btn-p btn-full" id="btn-connect">Connect to System</button>
+  </div>
+  <div class="land-meta"><div id="conn-status-land"></div></div>
+</div>
+
+<!-- ═══ AUDIENCE SEGMENT SCREEN (handles scenario / traffic / poll / policy-question) ═══ -->
+<div class="screen" id="segment" style="gap:1.05rem;">
+  <button class="nav-back" id="btn-sc-back">← Back to Console</button>
+  <div class="between w">
+    <div class="col" style="gap:.18rem;">
+      <span class="mono cyan" style="font-size:.65rem;letter-spacing:.2em;" id="sc-label">—</span>
+    </div>
+    <div class="col" style="align-items:flex-end;gap:.3rem;"><div id="conn-status-sc"></div></div>
+  </div>
+  <div class="panel bkt glow">
+    <h2 style="font-family:var(--disp);font-size:clamp(1.1rem,4vw,1.7rem);font-weight:700;color:#fff;line-height:1.2;margin-bottom:.75rem;" id="sc-title"></h2>
+    <div class="divider"></div>
+    <p style="font-size:.92rem;color:var(--text2);line-height:1.75;" id="sc-setup"></p>
+  </div>
+  <div class="human-banner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>HUMAN INPUT REQUIRED · SELECT AN OPTION</div>
+  <div class="w">
+    <div style="font-family:var(--mono);font-size:.62rem;color:var(--amber);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.38rem;">Decision Point</div>
+    <div style="font-family:var(--disp);font-size:.92rem;font-weight:600;color:var(--text);" id="sc-q"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:.65rem;width:100%;" id="opts"></div>
+  <div id="voted-confirm" style="display:none;flex-direction:column;align-items:center;gap:.6rem;padding:.8rem;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:var(--r);width:100%;animation:up .4s ease;">
+    <div style="display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;" class="green-c">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>VOTE TRANSMITTED
+    </div>
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);">Look at the main screen for live results.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:.65rem;width:100%;" id="sc-actions">
+    <button class="btn btn-p" id="btn-reveal" disabled>Reveal Consequences</button>
+    <button class="btn btn-g" id="btn-reset">↺ Reset</button>
+  </div>
+  <div id="cons-wrap" style="display:none;flex-direction:column;gap:.95rem;width:100%;">
+    <div class="cons-card rev1">
+      <div class="slabel">SYSTEM ANALYSIS · OUTCOME</div>
+      <div class="mono cyan" style="font-size:.67rem;margin-bottom:.45rem;" id="cons-opt"></div>
+      <p style="font-size:.92rem;color:var(--text2);line-height:1.75;" id="cons-out"></p>
+    </div>
+    <div class="panel rev2" id="cons-risk-panel">
+      <div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.45rem;">ORGANIZATIONAL IMPACT</div>
+      <div class="risk-num" id="cons-risk">—</div>
+      <div class="pg-track"><div class="pg-fill fill-r" id="cons-rbar"></div></div>
+    </div>
+    <div class="rev3" style="width:100%;">
+      <button class="btn btn-p btn-full" id="btn-to-prompt">Give AI The Job →</button>
+      <button class="btn btn-o btn-full" id="btn-done-noprompt" style="margin-top:.6rem;">✓ Done — Back to Console</button>
+    </div>
+  </div>
+  <div class="ticker w" id="tick1" style="padding-bottom:.4rem;"></div>
+</div>
+
+<!-- ═══ WATCH SCREEN (audience view during slides / reveals) ═══ -->
+<div class="screen" id="watch">
+  <div class="watch-card">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    <div class="disp cyan" style="font-size:.85rem;letter-spacing:.15em;">LOOK AT THE MAIN SCREEN</div>
+    <div class="mono muted" style="font-size:.7rem;" id="watch-note">Your next mission is coming up.</div>
+    <div id="conn-status-watch"></div>
+    <button class="nav-back" id="btn-watch-back" style="margin-top:1rem;">← Back to Console</button>
+  </div>
+</div>
+
+<!-- ═══ PROMPT SCREEN ═══ -->
+<div class="screen" id="prompt-screen" style="gap:1.05rem;">
+  <button class="nav-back" id="btn-prompt-back">← Back</button>
+  <div class="between w">
+    <div class="col" style="gap:.18rem;">
+      <span class="mono cyan" style="font-size:.62rem;letter-spacing:.18em;">GIVE AI THE JOB</span>
+      <span class="mono muted" style="font-size:.58rem;" id="prompt-sc-lbl"></span>
+    </div>
+    <div class="badge"><span class="dot" style="background:var(--amber);box-shadow:0 0 8px var(--amber);"></span>INPUT MODE</div>
+  </div>
+  <div class="panel" id="prompt-frame-panel" style="display:none;background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.3);">
+    <div style="font-family:var(--mono);font-size:.6rem;color:#a78bfa;letter-spacing:.12em;margin-bottom:.4rem;">YOUR VOTE, CARRIED FORWARD</div>
+    <p style="font-size:.88rem;color:var(--text2);line-height:1.65;" id="prompt-frame-text"></p>
+  </div>
+  <div class="panel bkt w">
+    <div class="slabel">YOUR MISSION</div>
+    <p style="font-size:.92rem;color:var(--text2);line-height:1.72;" id="prompt-task"></p>
+  </div>
+  <div class="w">
+    <div class="slabel">YOUR ASSIGNMENT</div>
+    <textarea class="ta" id="prompt-ta" placeholder="Type the assignment you'd give AI here…" rows="5"></textarea>
+  </div>
+  <button class="btn btn-p btn-full" id="btn-submit">Assign It</button>
+  <div id="eval-panel" style="display:none;flex-direction:column;gap:.9rem;width:100%;">
+    <div id="eval-analyzing" style="display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1.5rem;">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="16" stroke="rgba(0,229,255,0.2)" stroke-width="2"/>
+        <path d="M18 2 A16 16 0 0 1 34 18" stroke="#00e5ff" stroke-width="2" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="1s" repeatCount="indefinite"/>
+        </path>
+      </svg>
+      <div style="font-family:var(--mono);font-size:.7rem;color:var(--cyan);letter-spacing:.15em;" id="eval-status-txt">ANALYZING PROMPT...</div>
+    </div>
+    <div id="eval-result" style="display:none;flex-direction:column;gap:.9rem;">
+      <div class="panel bkt" style="border-color:rgba(0,229,255,0.3);">
+        <div class="slabel">AI EVALUATION · ASSIGNMENT ANALYSIS</div>
+        <div style="display:flex;align-items:flex-end;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);letter-spacing:.12em;margin-bottom:.2rem;">SCORE</div>
+            <div style="font-family:var(--disp);font-size:2.8rem;font-weight:900;line-height:1;" id="eval-score">—</div>
+          </div>
+          <div style="flex:1;">
+            <div class="pg-track" style="height:12px;margin-bottom:.5rem;"><div class="pg-fill" id="eval-score-bar" style="width:0%;transition:width 1.4s cubic-bezier(.25,1,.5,1);"></div></div>
+            <div style="font-family:var(--disp);font-size:.72rem;font-weight:700;letter-spacing:.08em;" id="eval-grade-label">—</div>
+          </div>
+        </div>
+        <div id="eval-dims"></div>
+      </div>
+      <div class="panel" style="background:var(--bg-card);"><div class="slabel">SYSTEM FEEDBACK</div><p style="font-size:.92rem;color:var(--text2);line-height:1.78;" id="eval-feedback"></p></div>
+      <div class="panel" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.2);"><div style="font-family:var(--mono);font-size:.6rem;color:var(--amber);letter-spacing:.15em;margin-bottom:.55rem;">HOW TO STRENGTHEN IT</div><p style="font-size:.9rem;color:var(--text2);line-height:1.75;" id="eval-improve"></p></div>
+      <button class="btn btn-o btn-full" id="btn-back-console2">⌂ Return to Main Console</button>
+    </div>
+  </div>
+  <div class="ticker w" id="tick2" style="padding-bottom:.4rem;"></div>
+</div>
+
+<!-- ═══ FACILITATOR ═══ -->
+<div class="screen" id="facilitator" style="gap:1.05rem;align-items:stretch;max-width:1000px;">
+  <div class="between">
+    <div class="col" style="gap:.18rem;">
+      <span class="mono cyan" style="font-size:.65rem;letter-spacing:.2em;">FACILITATOR CONSOLE</span>
+      <span class="mono muted" style="font-size:.6rem;">Run of Show</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+      <div id="conn-status-fac"></div>
+      <div class="badge"><span class="dot" style="background:var(--purple);box-shadow:0 0 8px var(--purple);"></span>ADMIN MODE</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="between" style="margin-bottom:.7rem;">
+      <div class="slabel" style="margin:0;border:none;padding:0;">RUN OF SHOW · CLICK TO JUMP</div>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn btn-g btn-sm" id="btn-fac-prev">← Prev</button>
+        <button class="btn btn-g btn-sm" id="btn-fac-next">Next →</button>
+      </div>
+    </div>
+    <div class="ros-list" id="ros-list"></div>
+    <div style="display:flex;gap:1rem;margin-top:.7rem;font-family:var(--mono);font-size:.58rem;color:var(--textm);letter-spacing:.08em;">
+      <span><span class="ros-pri must" style="display:inline-block;vertical-align:middle;margin-right:.3rem;"></span>MUST RUN</span>
+      <span><span class="ros-pri runiftime" style="display:inline-block;vertical-align:middle;margin-right:.3rem;"></span>RUN IF ON TIME</span>
+      <span><span class="ros-pri optional" style="display:inline-block;vertical-align:middle;margin-right:.3rem;"></span>OPTIONAL — CUT FIRST</span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;">
+    <a class="btn btn-o" id="btn-projector" href="?projector=true" target="_blank" rel="noopener" style="text-decoration:none;">Open Projector View</a>
+    <button class="btn btn-g" id="btn-fac-home">⌂ Main</button>
+    <button class="btn btn-d" id="btn-fac-reset">⚠ Reset This Item's Votes</button>
+  </div>
+
+  <div class="panel">
+    <div class="slabel">CURRENT ITEM PREVIEW</div>
+    <div style="font-family:var(--disp);font-size:.92rem;color:var(--cyan);margin-bottom:.45rem;" id="fac-prev-t"></div>
+    <p style="font-size:.86rem;color:var(--text2);line-height:1.65;margin-bottom:.55rem;" id="fac-prev-s"></p>
+    <div id="fac-prev-notes-wrap" style="display:none;">
+      <div class="cue-card" id="fac-cue-say" style="display:none;"><span class="cue-tag say">SAY</span><span class="cue-text"></span></div>
+      <div class="cue-card" id="fac-cue-ask" style="display:none;"><span class="cue-tag ask">ASK</span><span class="cue-text"></span></div>
+      <div class="cue-card" id="fac-cue-reveal" style="display:none;"><span class="cue-tag reveal">REVEAL</span><span class="cue-text"></span></div>
+      <div class="cue-card" id="fac-cue-land" style="display:none;"><span class="cue-tag land">LAND</span><span class="cue-text"></span></div>
+    </div>
+    <div id="fac-policy-action" style="display:none;margin-top:.8rem;">
+      <button class="btn btn-p" id="btn-generate-policy">⚡ Generate Room's AI Principles</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="between" style="margin-bottom:.8rem;">
+      <div class="slabel" style="margin:0;border:none;padding:0;">LIVE AUDIENCE RESULTS</div>
+      <div style="display:flex;align-items:center;gap:.7rem;">
+        <div id="conn-status-fac2"></div>
+        <div style="font-family:var(--disp);font-size:1.5rem;font-weight:900;color:var(--cyan);" id="fac-total-votes">0</div>
+        <div style="font-family:var(--mono);font-size:.55rem;color:var(--textm);letter-spacing:.1em;">VOTES</div>
+      </div>
+    </div>
+    <div id="fac-live-bars"></div>
+  </div>
+
+  <div class="panel" id="fac-gauge-panel">
+    <div class="slabel">HOW ARE WE BALANCING AI? (LIVE)</div>
+    <div class="gauge-mini" id="fac-gauge-mini"></div>
+  </div>
+
+  <div class="panel" style="padding:0;overflow:hidden;" id="fac-sample-panel">
+    <button onclick="toggleSample()" style="width:100%;background:none;border:none;cursor:pointer;padding:1.1rem 1.35rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+      <div class="slabel" style="margin:0;border:none;padding:0;color:var(--textm);">SAMPLE STRONG ASSIGNMENT</div>
+      <svg id="sample-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" style="flex-shrink:0;transition:transform .3s ease;"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div id="sample-body" style="display:none;padding:0 1.35rem 1.35rem;"><div class="sample-box" id="fac-sample"></div></div>
+  </div>
+
+  <div class="panel" id="fac-subs-panel">
+    <div class="between" style="margin-bottom:.7rem;">
+      <div class="slabel" style="margin:0;border:none;padding:0;">AUDIENCE ASSIGNMENTS</div>
+      <button class="btn btn-g btn-sm" id="btn-refresh">↻ Refresh</button>
+    </div>
+    <div class="subs" id="fac-subs"></div>
+  </div>
+</div>
+
+<!-- ═══ PROJECTOR ═══ -->
+<div class="screen" id="projector-screen">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;flex-wrap:wrap;gap:.75rem;">
+    <div class="col" style="gap:.3rem;"><span class="mono cyan" style="font-size:.68rem;letter-spacing:.2em;" id="proj-kicker">AI CONTROL ROOM</span></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;">
+      <div id="conn-status-proj"></div>
+      <div id="proj-vote-count" style="display:flex;align-items:baseline;gap:.4rem;">
+        <span style="font-family:var(--disp);font-size:2.6rem;font-weight:900;color:var(--cyan);text-shadow:var(--gcyan);line-height:1;" id="proj-total">0</span>
+        <span style="font-family:var(--mono);font-size:.65rem;color:var(--textm);letter-spacing:.12em;">VOTES</span>
+      </div>
+    </div>
+  </div>
+  <div class="w" id="proj-body" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.1rem;border-top:1px solid var(--border);padding-top:1.3rem;"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:1rem;border-top:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <div id="proj-footer-qr" style="padding:6px;background:#fff;border-radius:8px;box-shadow:0 0 20px rgba(0,229,255,0.3);display:inline-block;">
+        <img src="images/AI-Interactive-QR.png" alt="Scan to join" style="width:64px;height:64px;display:block;border-radius:3px;"/>
+      </div>
+      <div class="ticker" id="tick-proj"></div>
+    </div>
+    <div style="display:flex;gap:.6rem;">
+      <button class="btn btn-g btn-sm" id="btn-fullscreen" onclick="toggleFullscreen()">Fullscreen</button>
+      <button class="btn btn-g btn-sm" id="btn-exit-proj">✕ Exit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   RUN OF SHOW — edit content/order here
+   ══════════════════════════════════════════════════════════════ */
+const DECK = [
+{id:'title',type:'slide',min:1,kicker:'NLC-RISC 2026 STAFF CONFERENCE',title:'Leveraging AI Without Scaring Everyone',bullets:['Guardrails, Governance & Practical AI for Public Organizations'],
+ showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',qrUrl:'link.omag.org/nlc-risc',priority:'must',
+ notes:{say:'Welcome the room, quick housekeeping, thank the organizers.',land:'This is the waiting screen — sits on the projector until you click Next.'}},
+
+{id:'pulse-open',type:'poll',min:1,label:'Opening Pulse Check',setup:'Before we start —',q:'How are you feeling about AI right now?',priority:'must',
+ opts:[{id:'A',txt:'😬 Mostly concerned',g:{inno:-3,priv:3,acc:1,human:2}},{id:'B',txt:'🤔 Interested, but cautious',g:{inno:1,priv:1,acc:1,human:1}},{id:'C',txt:'👍 Already using it',g:{inno:3,priv:-1,acc:0,human:-1}},{id:'D',txt:'🚀 Give me all the AI',g:{inno:5,priv:-3,acc:-2,human:-3}}],
+ notes:{say:'"We\'ll ask this again before you leave."',ask:'How are you feeling about AI right now?',land:'Don\'t dwell — quick tap, move on.'}},
+
+{id:'adoption-stat',type:'slide',min:2,kicker:'WHY THIS MATTERS NOW',title:'Interest Is Moving Faster Than Governance',priority:'must',
+ bullets:['Employees are already experimenting with AI tools on their own, whether or not there\'s a policy for it.'],
+ columns:[{h:'96%',d:'of mayors are interested in using AI'},{h:'9%',d:'of local governments have a formal internal AI policy'},{h:'38%',d:'say their org isn\'t prepared to use AI safely'}],
+ notes:{land:'Let the contrast breathe for a second before moving on.'}},
+
+{id:'wrong-question',type:'slide',min:1,kicker:'REFRAME',title:'"Should We Allow AI?" Is the Wrong Question',priority:'runiftime',
+ bullets:['The better question: "How should we use it?"','AI is already entering our organizations — through employees, vendors, software, and public expectations.','A ban doesn\'t stop that. It just pushes it out of sight, into personal accounts and unapproved tools.'],
+ callout:'Ban it. Anything goes. Or: responsible use.',
+ notes:{say:'Two road signs colliding into a third path — say it, don\'t need to show it.'}},
+
+{id:'platform-model',type:'slide',min:2,kicker:'FIRST, LET\'S CLEAR SOMETHING UP',title:'Platform vs. Model — Think of It Like a Vehicle',priority:'must',
+ bullets:['"We use ChatGPT" or "we use Claude" doesn\'t actually tell you much — the platform is just the vehicle.'],
+ columns:[{h:'PLATFORM',d:'The vehicle — ChatGPT, Claude, Gemini, Copilot'},{h:'MODEL',d:'The engine — GPT, Claude Sonnet/Opus, Gemini models'},{h:'TOOLS',d:'What the vehicle can access or do'},{h:'DATA',d:'What you\'re putting inside it'}],
+ callout:'Two people can "use the same AI" while actually using very different systems.',
+ notes:{say:'The app is not the intelligence itself.',land:'This is the model-vs-platform literacy moment.'}},
+
+{id:'model-choices',type:'slide',min:1,kicker:'MODELS ARE NOT INTERCHANGEABLE',title:'⚡ Fast · 🧠 Balanced · 🔬 Deep',priority:'runiftime',
+ bullets:['Every platform now offers more than one model — picking the right one is part of using AI responsibly.'],
+ columns:[{h:'⚡ FAST',d:'Routine tasks, high volume, quick answers, lower cost'},{h:'🧠 BALANCED',d:'Strong reasoning, everyday professional work'},{h:'🔬 DEEP',d:'Complex reasoning, large problems, higher cost'}],
+ callout:'The best model is the one appropriate for the task.',
+ notes:{land:'Sets up the Pick The AI vote next.'}},
+
+{id:'pick-ai',type:'poll',min:2,label:'Pick The AI',setup:'Rewrite this 200-word event announcement so it\'s easier for residents to understand.',q:'Which would you choose?',priority:'optional',
+ opts:[{id:'A',txt:'⚡ FAST',g:{inno:2,acc:0}},{id:'B',txt:'🧠 BALANCED',g:{inno:1,acc:1}},{id:'C',txt:'🔬 DEEP',g:{acc:1,human:1}}],
+ notes:{ask:'Which model would you choose for this task?',reveal:'Say out loud: probably FAST or BALANCED.',land:'More powerful isn\'t automatically more appropriate.'}},
+
+{id:'sl-edges',type:'slide',min:2,kicker:'AI HAS EDGES',title:'Data · Accuracy · Decision · Accountability',priority:'must',
+ bullets:['Four questions worth asking before any AI-assisted work leaves your desk.'],
+ columns:[{h:'DATA',d:'What did you give it?'},{h:'ACCURACY',d:'Is the output true?'},{h:'DECISION',d:'What authority did you give it?'},{h:'ACCOUNTABILITY',d:'Who owns the result?'}],
+ notes:{say:'Transition from capability to governance.'}},
+
+{id:'confidence-accuracy',type:'slide',min:2,kicker:'A CRITICAL DISTINCTION',title:'AI Confidence ≠ AI Accuracy',priority:'runiftime',
+ bullets:['It can be spectacularly helpful — and spectacularly wrong — with exactly the same confidence.','A polished, well-formatted answer is not the same thing as a correct one.'],
+ callout:'The interface doesn\'t look nervous when it\'s guessing.',
+ notes:{land:'Sets up Trust It or Check It.'}},
+
+{id:'trust-check',type:'scenario',min:3,label:'Was AI\'s Answer Trustworthy?',priority:'must',
+ setup:'Here is the full policy excerpt, in front of you the whole time: Section 4 says "Employees must report incidents within five business days." Section 8, added in a later revision to the same document, says "Report within 72 hours." Both sections currently exist side by side. AI was asked: "According to this policy, how quickly must an incident be reported?" It answered: "Employees must report incidents within five business days" — citing Section 4, with no mention of Section 8.',
+ q:'Was AI\'s answer trustworthy?',
+ opts:[
+  {id:'A',txt:'YES — it accurately quoted the policy',out:'Technically true, but incomplete. AI had access to the full document, including Section 8 — the more recent revision. Quoting one section accurately isn\'t the same as answering correctly.'},
+  {id:'B',txt:'NO — it should have flagged the conflict',out:'Exactly. AI had everything it needed to catch this — both sections were right there in the same document. It picked one and answered with full confidence instead of surfacing the disagreement.'},
+  {id:'C',txt:'IT DEPENDS on which section actually governs',out:'Fair instinct, and maybe true — but that\'s exactly the point: AI never told you there was a question to resolve. It answered as if Section 4 were the only relevant text in the document.'},
+ ],
+ notes:{ask:'Was AI\'s answer trustworthy, given both sections were right in front of everyone the whole time?',reveal:'No hidden reveal here — everyone already has both sections. This is a genuine discussion, not a trick.',land:'The problem wasn\'t AI having wrong information — it was AI having the right information and not surfacing the conflict.'}},
+
+{id:'ai-uncertainty',type:'slide',min:1,kicker:'A GOOD ANSWER LOOKS LIKE THIS TOO',title:'"I Don\'t Have Enough Information"',priority:'runiftime',
+ bullets:['AI was asked which policy revision governs a specific incident type — without being given the revision date or governing section.','Its response: "I can\'t determine this from the information provided. I would need the current policy revision date and the governing section before answering." Then it stopped.'],
+ callout:'That may be the best AI answer we see all day.',
+ notes:{say:'The goal isn\'t getting AI to always answer.',land:'Sometimes responsible AI behavior is knowing when NOT to answer — the mirror image of what just happened when AI answered confidently instead of flagging the conflict.'}},
+
+{id:'riscville',type:'slide',min:1,kicker:'CITY OF RISCVILLE',title:'Welcome to the City of Riscville',priority:'must',
+ bullets:['A fictional city, so nobody has to use real organizational data for what comes next.','Riscville just approved AI use. Nobody has told the departments how to use it responsibly yet — that\'s about to become very obvious.'],
+ columns:[{h:'POPULATION',d:'24,600'},{h:'EMPLOYEES',d:'187'},{h:'AI POLICY',d:'None (yet)'},{h:'AI ENTHUSIASM',d:'Questionable'}],
+ notes:{say:'"We just approved AI in Riscville. Let\'s see how well we run it."',land:'From here, the projector header stays branded CITY OF RISCVILLE through the guardrail scenario — keep narrating each round as the next department walking through the door.'}},
+
+{id:'tc1',type:'traffic',min:2,label:'Riscville Traffic Control — Communications',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
+ item:'Communications is first through the door: they want to use AI to rewrite a publicly available council agenda into plain language for residents.',correct:0,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:{say:'Communications is first through the door.',ask:'Green, Yellow, or Red?',reveal:'Recommended: GREEN. Public info, low consequence, easy human review, clear benefit.',land:'Low-risk use doesn\'t need high-friction governance.'}},
+
+{id:'tc2',type:'traffic',min:2,label:'Riscville Traffic Control — HR (optional, skip if short on time)',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'optional',
+ item:'HR saw what Communications was doing and decided they wanted in too — they want AI to create five interview questions using the publicly posted job description.',correct:0,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:{say:'HR saw what Communications was doing and wanted in too.',ask:'Green, Yellow, or Red?',reveal:'Recommended: GREEN or light YELLOW depending on your org\'s review expectations.',land:'Reasonable organizations may draw this line differently. Cut this round first if you\'re running long.'}},
+
+{id:'tc3',type:'traffic',min:2,label:'Riscville Traffic Control — A Supervisor',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
+ item:'Word is spreading fast. A supervisor decides to try it on their own — they paste an employee\'s medical documentation into their personal AI account and ask for a summary.',correct:2,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:{say:'Word is spreading fast through Riscville.',ask:'Green, Yellow, or Red?',reveal:'Recommended: RED. Sensitive information, unapproved environment, unnecessary exposure.',land:'The issue isn\'t simply AI — it\'s data + environment + purpose.'}},
+
+{id:'tc4',type:'traffic',min:2,label:'Riscville Traffic Control — Risk Management',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
+ item:'Meanwhile, Risk Management has been sitting on 5,000 incident records they\'ve never had time to fully analyze. An approved enterprise AI system analyzes the anonymized descriptions to identify recurring trends for human review.',correct:1,
+ opts:[{id:'A',txt:'🟢 GREEN'},{id:'B',txt:'🟡 YELLOW'},{id:'C',txt:'🔴 RED'}],
+ notes:{say:'Meanwhile, Risk Management has 5,000 incident records sitting untouched.',ask:'Green, Yellow, or Red?',reveal:'Recommended: YELLOW. Significant value, controlled environment, anonymized data, human interpretation still required.',land:'Yellow means proceed thoughtfully, not stop.'}},
+
+{id:'guardrail',type:'scenario',min:5,label:'Guardrail Triggered · The HR Complaint',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
+ setup:'And now Riscville has its first real test. An HR director received a complaint alleging misconduct by an employee. They want AI to review the complaint, determine whether policy was violated, and recommend disciplinary action.',
+ q:'What happens when this request goes to AI?',
+ opts:[
+  {id:'A',txt:'AI reviews the complaint, determines guilt, and recommends discipline',out:'🚧 GUARDRAIL TRIGGERED. AI can assist with organizing information or identifying relevant policy language, but it should not autonomously determine misconduct or recommend discipline. This moved from ASSIST all the way to DECIDE — too far, too fast.',rsk:82,gInno:2},
+  {id:'B',txt:'Reframe the task: organize allegations, identify relevant policy sections, generate questions for a human investigator',out:'The reframed task worked well. AI organized the allegations against the relevant sections of policy and drafted a clean set of questions for a human investigator to ask. AI moved from decision-maker to assistant — same tool, appropriate authority.',rsk:14,gInno:1},
+  {id:'C',txt:'Decline to use AI for this entirely, keep it fully manual',out:'A safe choice, but a missed opportunity. AI could have saved real time organizing the allegations against policy language — the fix was reframing the task, not banning the tool.',rsk:38,gInno:-4},
+ ],
+ pTask:'Give AI the reframed job yourself: organize allegations, cite relevant policy sections, and draft investigator questions — without ever determining guilt or recommending discipline.',
+ pSample:'You are assisting a human HR investigator, not making a determination. Organize the following complaint into a clear timeline of allegations. For each allegation, identify the specific policy sections that may be relevant (cite them, do not interpret whether they were violated). Then draft five open-ended questions a human investigator should ask during the investigation. Do not state or imply whether misconduct occurred, and do not recommend any disciplinary outcome.',
+ pFrame:{A:'You let AI determine guilt and recommend discipline — that\'s exactly the guardrail this scenario exists to catch. Now try the version that keeps AI in the room without handing it the decision.',
+  B:'You reframed the task instead of either extreme — that\'s exactly the move. Now let\'s see if you can actually write the assignment that pulls it off: organizing, citing policy, drafting questions, without ever determining guilt.',
+  C:'You kept it fully manual — safe, but you gave up real time AI could have saved organizing the complaint against policy. Let\'s see if you can build an assignment that gets that help without crossing into a decision AI shouldn\'t make.'},
+ notes:{say:'And now Riscville has its first real test.',ask:'What happens when this request goes to AI?',reveal:'Don\'t reveal the reframe option\'s superiority until after the vote.',land:'This is your guardrail-not-roadblock moment. Last Riscville-branded screen — header returns to normal after this.'}},
+
+{id:'gov-framework',type:'slide',min:3,kicker:'GOVERN WITHOUT BANNING',title:'Green · Yellow · Red',priority:'must',
+ bullets:['🟢 GREEN — normal work: brainstorming, drafting, formatting, public info, general research. Use it like any other tool.','🟡 YELLOW — slow down: internal docs, data analysis, HR work, claims/incident info, legal research. Needs an approved tool and a human check before it goes anywhere.','🔴 RED — stop or reframe: credentials, unauthorized sensitive info, autonomous high-impact decisions. If you\'re here, change the task, not just the tool.'],
+ callout:'A guardrail says "use AI here, under these conditions" — not "don\'t."',
+ notes:{say:'Don\'t start with a 14-page policy. Start with organizational decisions.'}},
+
+{id:'six-questions',type:'slide',min:1,kicker:'BEFORE YOU WRITE THE POLICY',title:'Six Questions Your Organization Must Answer',priority:'runiftime',
+ bullets:['Which tools are approved?','What data can be used, and what can\'t?','What requires human review before it goes out?','What uses are prohibited outright?','Who remains accountable when AI is involved?','How are new tools evaluated before they\'re approved?'],
+ callout:'A policy document can\'t answer questions your organization has never discussed.',
+ notes:{land:'Read these fast — they set up the policy-builder vote coming up.'}},
+
+{id:'four-question-guardrail',type:'slide',min:1,kicker:'BEFORE YOU HIT SUBMIT',title:'The Four-Question Guardrail',priority:'must',
+ bullets:['DATA — what am I giving it? (Would I be comfortable if this leaked?)','DECISION — what am I asking it to do? (Assist, or actually decide?)','ENVIRONMENT — where is the information going? (Approved tool, or a personal account?)','DOUBLE-CHECK — what must a human verify before this goes out?'],
+ callout:'If employees remember nothing else, remember these four questions.',
+ notes:{land:'This is the single most portable takeaway of the whole session.'}},
+
+{id:'mission1-intro',type:'slide',min:1,kicker:'YOUR FIRST AI MISSION',title:'A City Manager Just Handed You a Problem',priority:'runiftime',
+ bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you give it the job, and everyone votes on what happens next'],
+ notes:{say:'Transition into the Press Release mission.'}},
+
+{id:'m-press',type:'scenario',min:6,label:'Mission 1 · The Press Release',priority:'must',
+ setup:'A department head asks your communications team to let AI write a press release about a new city infrastructure grant. They send over a one-paragraph summary and tell you to make it a full release. The department head says they will approve it with a quick read.',
+ q:'What is the risk in this workflow and how do you manage it?',
+ opts:[
+  {id:'A',txt:'Run the AI release as written after the department head approves it',out:'The release included a grant amount that the AI rounded incorrectly and a quote attributed to a state official that the official never said. The local paper ran a correction the next day. AI invented details that were not in the source material.',rsk:78,gInno:3},
+  {id:'B',txt:'Use AI to draft the release but verify every specific fact against primary sources before sending',out:'The best outcome. AI produced a clean structure and professional language in minutes. A staff member verified the grant amount, confirmed the quote, and checked the program name. The release went out accurate and on time.',rsk:15,gInno:1},
+  {id:'C',txt:'Decline to use AI for press releases because accuracy cannot be guaranteed',out:'SAFE, BUT HIGH-FRICTION. The release remained accurate, but the team gave up an opportunity to accelerate drafting while retaining human fact-checking. The risk could have been managed without removing AI entirely.',rsk:44,gInno:-5},
+ ],
+ pTask:'Give AI the job of drafting a government press release that is structured professionally and flags where facts need verification.',
+ pSample:'Draft a press release for a city government announcing a new infrastructure grant. Use the following information as your source. Use standard press release format: headline, dateline, opening paragraph with the key facts, one or two supporting paragraphs with context, a quote placeholder clearly marked as needing official approval, and a boilerplate closing. Flag any specific numbers or claims that should be verified against official sources before distribution.',
+ pFrame:{A:'You picked the fast path — get it out with a quick read and move on. That instinct is exactly how the rounded grant amount and invented quote slipped through. Now build an assignment that keeps AI\'s speed without that risk.',
+  B:'You picked the safer approach — verify before it goes out. Knowing that\'s the right call and getting AI to actually execute it are two different skills. Let\'s see if you can build the assignment that produces it.',
+  C:'You played it safe by skipping AI entirely — understandable, but it cost you speed for a risk that could have been managed differently. Let\'s see if you can build an assignment that gets you the accuracy you wanted without giving up the tool.'},
+ notes:{say:'This is your hallucination teaching moment.',ask:'What is the risk in this workflow and how do you manage it?',reveal:'Option A is the trap.',land:'A polished, confident answer isn\'t the same thing as a correct one.'}},
+
+{id:'verdict-press',type:'poll',min:1,label:'Would You Use It?',q:'Looking at that press release outcome — would you use this workflow?',priority:'optional',
+ opts:[{id:'A',txt:'✅ USE IT — ready with normal review',g:{human:1}},{id:'B',txt:'✏️ REVIEW IT — helpful, but needs work',g:{human:2}},{id:'C',txt:'🚫 DON\'T USE IT — not appropriate or trustworthy',g:{human:-1}}],
+ notes:{ask:'Would you use this workflow?',land:'Quick gut-check poll, no reveal needed — the split itself is the discussion.'}},
+
+{id:'sl-model',type:'slide',min:1,kicker:'CHOOSING THE RIGHT MODEL, LIVE',title:'⚡ Fast vs. 🧠 Deep — Under Time Pressure',priority:'runiftime',
+ bullets:['Same principle as Claude Sonnet vs. Claude Opus','Choosing a model is part of choosing a level of risk','Watch for which option in the next mission is genuinely fast, and which one just feels fast'],
+ notes:{say:'Segue into the Water Main Break mission.'}},
+
+{id:'m-water',type:'scenario',min:6,label:'Mission 2 · The Water Main Break',priority:'must',
+ setup:'A major water main has broken in a residential neighborhood. Repairs will take 6 to 8 hours. Residents have no water. Your team has one person on duty and is being flooded with calls. Leadership wants something out in the next 10 minutes.',
+ q:'What is the best use of AI right now?',
+ opts:[
+  {id:'A',txt:'🧠 DEEP: Use AI to draft a full 24-hour crisis communications plan',out:'GOOD AI. WRONG JOB. A thorough plan was produced but took 22 minutes to review. The 10-minute window passed. Residents had already found conflicting information elsewhere.',rsk:61,gInno:-1},
+  {id:'B',txt:'⚡ FAST: Use AI to draft an immediate holding statement with confirmed facts, reviewed before posting',out:'RIGHT AI. RIGHT JOB. A holding statement was drafted, reviewed, and posted in eight minutes. Comments shifted from complaints to questions your team could answer.',rsk:17,gInno:4},
+  {id:'C',txt:'⚡ FAST: Let AI respond to every Facebook comment in real time, unreviewed',out:'FAST AI. NO GUARDRAIL. Two AI responses contained inaccurate repair timelines. Screenshots spread faster than the correct information. Your team spent two hours correcting AI content instead of managing the crisis.',rsk:79,gInno:5},
+ ],
+ pTask:'Give AI the job of drafting a holding statement for a public works emergency that informs without overpromising.',
+ pSample:'You are a municipal communications specialist. Draft a short public statement for a city experiencing a water main break. Include: what happened in plain language, which area is affected, the estimated repair timeline, what residents should do right now, and when the next update will come. Keep it under 150 words. Do not speculate about causes. Use a calm, factual tone.',
+ pFrame:{A:'You picked the thorough plan — solid instinct, wrong moment. A 22-minute review missed the 10-minute window entirely. Let\'s see if you can build an assignment that gets you something usable fast, without skipping the review step.',
+  B:'You picked speed with a human check before posting — that\'s the balance that actually worked. Knowing that\'s the right call and getting AI to execute it well are different skills. Let\'s see if you can build the assignment that produces it.',
+  C:'You picked pure speed with no review — that\'s exactly what let two inaccurate timelines go out unchecked. Let\'s see if you can build an assignment that keeps the speed but adds the guardrail that was missing.'},
+ notes:{say:'Frame this live as: which option is FAST, which is DEEP, which is reckless speed.',ask:'What is the best use of AI right now?',land:'Right AI, right job beats both good-AI-wrong-job and fast-AI-no-guardrail.'}},
+
+{id:'verdict-water',type:'poll',min:1,label:'Would You Use It?',q:'And that holding statement — would you use this workflow?',priority:'optional',
+ opts:[{id:'A',txt:'✅ USE IT',g:{human:1}},{id:'B',txt:'✏️ REVIEW IT',g:{human:2}},{id:'C',txt:'🚫 DON\'T USE IT',g:{human:-1}}],
+ notes:{ask:'Would you use this workflow?',land:'Quick gut-check, move straight into policy building.'}},
+
+{id:'sl-policy',type:'slide',min:1,kicker:'BUILD IT TOGETHER',title:'Let\'s Build YOUR AI Policy',priority:'runiftime',
+ bullets:['Your answers to the next four questions become the room\'s principles','No right answers — just decisions','Reasonable organizations land in different places on these, and that\'s fine'],
+ notes:{say:'Set up the 4 policy questions.'}},
+
+{id:'pq1',type:'policy',min:1,label:'Policy Question 1/4',q:'Should employees be limited to organization-approved AI tools?',priority:'must',
+ opts:[{id:'A',txt:'Yes — approved tools only'},{id:'B',txt:'Approved tools for work data; anything for brainstorming'},{id:'C',txt:'No restriction — employee judgment'}]},
+{id:'pq2',type:'policy',min:1,label:'Policy Question 2/4',q:'Which AI outputs require human review before they\'re used?',priority:'must',
+ opts:[{id:'A',txt:'Everything, every time'},{id:'B',txt:'Only Yellow/Red-level work — data, HR, legal, high-impact decisions'},{id:'C',txt:'Only autonomous high-impact decisions'}]},
+{id:'pq3',type:'policy',min:1,label:'Policy Question 3/4',q:'Where\'s the line for sensitive organizational information?',priority:'must',
+ opts:[{id:'A',txt:'Never leaves an approved, org-controlled environment'},{id:'B',txt:'Anonymized or aggregated data is fine anywhere'},{id:'C',txt:'Case-by-case, based on who\'s asking'}]},
+{id:'pq4',type:'policy',min:1,label:'Policy Question 4/4',q:'Does using AI transfer accountability away from the employee who used it?',priority:'must',
+ opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}],
+ notes:{reveal:'Expect close to unanimous NO.',land:'That sets up the closing beautifully.'}},
+
+{id:'policy-reveal',type:'policy-reveal',min:3,label:'Your Room\'s AI Principles',priority:'must',
+ notes:{reveal:'Click "Generate Room\'s AI Principles" in the panel below once all 4 policy votes are in.'}},
+
+{id:'health-reveal',type:'health-reveal',min:2,label:'How Did We Balance AI?',priority:'optional',
+ notes:{say:'Reveal the four gauges.',land:'Talk through how the room balanced innovation against caution across the whole hour.'}},
+
+{id:'pulse-close',type:'poll',min:1,label:'Final Pulse Check',setup:'Same four options as when we started —',q:'How are you feeling about AI now?',priority:'must',
+ opts:[{id:'A',txt:'😬 Mostly concerned'},{id:'B',txt:'🤔 Interested, but cautious'},{id:'C',txt:'👍 Already using it'},{id:'D',txt:'🚀 Give me all the AI'}],
+ notes:{ask:'How are you feeling about AI now?',reveal:'Compare live results to the opening pulse check out loud.',land:'That shift IS part of the closing argument.'}},
+
+{id:'pulse-close-2',type:'poll',min:1,label:'Final Pulse Check — Readiness',q:'How prepared do you feel to make AI decisions in your organization?',priority:'must',
+ opts:[{id:'A',txt:'😬 Not prepared'},{id:'B',txt:'🤔 I know what questions to ask'},{id:'C',txt:'👍 I could help establish guardrails'},{id:'D',txt:'🚀 I\'m ready to lead the conversation'}],
+ notes:{ask:'How prepared do you feel to make AI decisions in your organization?',land:'This measures what the session actually changed — confidence and literacy, not enthusiasm. This is your real conference metric.'}},
+
+{id:'closing',type:'slide',min:1,kicker:'CLOSING',title:'Know the Tool. Know the Edges. Build the Guardrails.',priority:'must',
+ bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment','None of this requires you to be an AI expert — it requires you to be clear about where the line is'],
+ callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',
+ notes:{say:'Point to resources / QR for the session hub.',land:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible. Thank the room.'}},
+
+{id:'thank-you',type:'slide',min:3,kicker:'THANK YOU',title:'Questions?',priority:'must',
+ bullets:['Reach out anytime — happy to talk AI governance, guardrails, or how this session was built.'],
+ showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',
+ presenterPhone:'405-657-1428',presenterEmail:'mburleson@omag.org',qrLabel:'Scan to revisit the session',
+ callout:'The goal was never to make you afraid of AI. It was to make you ready for it.',
+ notes:{say:'Open the floor for Q&A.',land:'Leave this screen up as long as people are lingering — thank the room.'}},
+];
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+const SK='aicr1';
+const IS_PROJECTOR = new URLSearchParams(window.location.search).get('projector')==='true';
+let IS_FACILITATOR = false;
+let ABLY_KEY='';
+let SESSION_NAME='nlc-risc-2026';
+const dflt=()=>({idx:0,sel:null,prompts:[]});
+let S=dflt(); // always start fresh per device load — facilitator drives idx via broadcast
+const save=()=>localStorage.setItem(SK,JSON.stringify(S));
+
+let votes={}; // votes[segId] = {A:n,B:n,...}
+DECK.forEach(d=>{ if(d.opts) votes[d.id]={}; });
+let gauges={inno:0,priv:0,acc:0,human:0,cnt:{inno:0,priv:0,acc:0,human:0}};
+let policyResult=null;
+
+function totalVotes(id){ const v=votes[id]||{}; return Object.values(v).reduce((a,b)=>a+b,0); }
+function pct(id,optId){ const t=totalVotes(id); if(!t) return 0; return Math.round(((votes[id][optId]||0)/t)*100); }
+
+function gaugeVal(k){ const c=gauges.cnt[k]||0; if(!c) return 50; return Math.max(0,Math.min(100, Math.round(50+gauges[k]/c))); }
+
+function applyGaugeDelta(g){
+  if(!g) return;
+  ['inno','priv','acc','human'].forEach(k=>{ if(typeof g[k]==='number'){ gauges[k]+=g[k]; gauges.cnt[k]++; } });
+}
+
+// derive gauge delta for a scenario option from rsk + gInno
+function scenarioGaugeDelta(opt){
+  if(typeof opt.rsk!=='number') return null; // literacy-style options with no risk score don't move gauges
+  const base=Math.round((50-opt.rsk)/10);
+  return {inno:(typeof opt.gInno==='number'?opt.gInno:base), priv:base, acc:base, human:base};
+}
+function trafficGaugeDelta(pickIdx,correctIdx){
+  const dist=pickIdx-correctIdx;
+  if(dist===0) return {inno:2,priv:2,acc:2,human:2};
+  if(dist<0) return {inno:2,priv:-3,acc:-2,human:-2};
+  return {inno:-3,priv:2,acc:0,human:1};
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+const qa=(s,c)=>[...(c||document).querySelectorAll(s)];
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtT=iso=>new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+function dbg(m){ console.log('[ACR]',m); }
+function showScreen(id){ qa('.screen').forEach(s=>s.classList.remove('active')); const el=$(id); if(el){el.classList.add('active'); window.scrollTo({top:0,behavior:'instant'});} }
+function toast(msg,ms=2500){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._tid); t._tid=setTimeout(()=>t.classList.remove('show'),ms); }
+
+/* ══════════════════════════════════════════════════════════════
+   ABLY
+   ══════════════════════════════════════════════════════════════ */
+let ablyClient=null, voteChannel=null, stateChannel=null;
+function channelName(suffix){ return `${SESSION_NAME}:${suffix}`; }
+function connPill(state){
+  const labels={connected:'LIVE',connecting:'CONNECTING',disconnected:'OFFLINE'};
+  const cls={connected:'connected',connecting:'connecting',disconnected:'disconnected'};
+  return `<div class="conn-pill ${cls[state]||'disconnected'}"><span class="conn-dot"></span>${labels[state]||'OFFLINE'}</div>`;
+}
+function updateConnUI(state){
+  ['conn-status-land','conn-status-sc','conn-status-fac','conn-status-fac2','conn-status-watch','conn-status-proj']
+  .forEach(id=>{ const el=$(id); if(el) el.innerHTML=connPill(state); });
+}
+async function connectAbly(key){
+  if(!key){ updateConnUI('disconnected'); return false; }
+  if(ablyClient){ try{ablyClient.close();}catch(e){} ablyClient=null; voteChannel=null; stateChannel=null; }
+  try{
+    if(typeof Ably==='undefined'){ updateConnUI('disconnected'); return false; }
+    updateConnUI('connecting');
+    ablyClient=new Ably.Realtime({key:key, clientId:'user-'+Math.random().toString(36).slice(2,8), closeOnUnload:true});
+    await new Promise((res,rej)=>{
+      const onC=()=>{cleanup();res();}, onF=(sc)=>{cleanup();rej(new Error(sc.reason?.message||'failed'));}, onS=(sc)=>{cleanup();rej(new Error('suspended'));};
+      const cleanup=()=>{ablyClient.connection.off('connected',onC);ablyClient.connection.off('failed',onF);ablyClient.connection.off('suspended',onS);};
+      ablyClient.connection.on('connected',onC); ablyClient.connection.on('failed',onF); ablyClient.connection.on('suspended',onS);
+      setTimeout(()=>{cleanup();rej(new Error('timeout'));},10000);
     });
-    const data = await response.json();
-    if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || 'Anthropic API error' });
+    updateConnUI('connected');
+    voteChannel=ablyClient.channels.get(channelName('votes'));
+    stateChannel=ablyClient.channels.get(channelName('state'));
+
+    stateChannel.subscribe('hello',msg=>{ if($('facilitator').classList.contains('active')) stateChannel.publish('current',{idx:S.idx}); });
+    stateChannel.subscribe('segment',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number' && idx!==S.idx){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
+    stateChannel.subscribe('current',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number'){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
+    stateChannel.subscribe('policyResult',msg=>{ policyResult=msg.data?.text||null; if($('projector-screen').classList.contains('active')) renderProjector(); if($('facilitator').classList.contains('active')) renderFacPreview(); });
+
+    voteChannel.subscribe('vote',msg=>{
+      const {segId,opt,gauge}=msg.data||{};
+      if(!segId||!opt||!votes[segId]) return;
+      votes[segId][opt]=(votes[segId][opt]||0)+1;
+      applyGaugeDelta(gauge);
+      refreshAllLiveUI();
+    });
+    voteChannel.subscribe('snapshot',msg=>{ const snap=msg.data; if(snap){ votes=snap.votes||votes; gauges=snap.gauges||gauges; refreshAllLiveUI(); } });
+    voteChannel.subscribe('prompt',msg=>{
+      const entry=msg.data; if(!entry||!entry.sid||!entry.txt) return;
+      const exists=S.prompts.some(p=>p.ts===entry.ts && p.txt===entry.txt);
+      if(!exists){ S.prompts.push(entry); save(); if($('facilitator').classList.contains('active')) renderSubs(); }
+    });
+
+    setTimeout(()=>{ stateChannel.publish('hello',{ts:Date.now()}); },1000);
+    ablyClient.connection.on('disconnected',()=>updateConnUI('connecting'));
+    ablyClient.connection.on('suspended',()=>updateConnUI('disconnected'));
+    ablyClient.connection.on('connected',()=>updateConnUI('connected'));
+    return true;
+  }catch(e){ updateConnUI('disconnected'); ablyClient=null; voteChannel=null; stateChannel=null; return false; }
+}
+async function publishVote(segId,opt,gauge){
+  if(!voteChannel){ votes[segId][opt]=(votes[segId][opt]||0)+1; applyGaugeDelta(gauge); refreshAllLiveUI(); return; }
+  try{ await voteChannel.publish('vote',{segId,opt,gauge}); }catch(e){ console.error(e); }
+}
+async function broadcastSegment(idx){ _rendered={}; if(!stateChannel) return; try{ await stateChannel.publish('segment',{idx}); await stateChannel.publish('current',{idx}); }catch(e){} }
+async function broadcastReset(){
+  const seg=DECK[S.idx]; _rendered={};
+  if(seg.opts) votes[seg.id]={};
+  if(!voteChannel) return;
+  try{ await voteChannel.publish('snapshot',{votes,gauges}); }catch(e){}
+  refreshAllLiveUI();
+}
+async function broadcastPolicyResult(text){ policyResult=text; if(!stateChannel) return; try{ await stateChannel.publish('policyResult',{text}); }catch(e){} }
+
+/* ══════════════════════════════════════════════════════════════
+   LIVE BARS (generic — works for scenario/traffic/poll/policy)
+   ══════════════════════════════════════════════════════════════ */
+const OPT_COLORS=['opt-A','opt-B','opt-C','opt-D'];
+let _rendered={};
+let _lastProjBarsFor=null; // tracks which segment id's #proj-bars-inner is currently mounted (it gets destroyed whenever any other branch of renderProjector runs)
+function renderLiveBars(containerId,segIdx,large=false){
+  const seg=DECK[segIdx]; const el=$(containerId); if(!el||!seg.opts) return;
+  const key=containerId+':'+segIdx;
+  if(_rendered[key]){ updateLiveBars(containerId,segIdx,large); return; }
+  const id=seg.id, total=totalVotes(id), maxPct=Math.max(...seg.opts.map(o=>pct(id,o.id)),1);
+  el.innerHTML=seg.opts.map((opt,i)=>{
+    const p=pct(id,opt.id), cnt=(votes[id]&&votes[id][opt.id])||0, lead=p===maxPct&&total>0;
+    if(large){
+      return `<div class="proj-bar-wrap"><div class="proj-bar-label"><span><strong style="color:var(--cyan);">${opt.id}</strong>&nbsp;${esc(opt.txt)}</span><span class="proj-bar-pct" style="color:${lead?'var(--cyan)':'var(--text2)'}">${p}%</span></div><div class="proj-track"><div class="proj-fill ${OPT_COLORS[i]}${lead?' leading':''}" id="pbar-${opt.id}" style="width:0%"></div></div><div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);margin-top:.3rem;">${cnt} vote${cnt!==1?'s':''}</div></div>`;
     }
-    return res.status(200).json(data);
-  } catch (err) {
-    console.error('Evaluate error:', err);
-    return res.status(500).json({ error: 'Server error: ' + err.message });
+    return `<div class="live-bar-wrap"><div class="live-bar-label"><span><strong class="cyan">${opt.id}</strong>&nbsp;<span style="font-size:.82rem;">${esc(opt.txt).substring(0,54)}</span>${lead&&total>0?'<span class="live-winner-tag">LEADING</span>':''}</span><span><span class="live-bar-pct">${p}%</span><span class="live-bar-count">${cnt}v</span></span></div><div class="live-track"><div class="live-fill ${OPT_COLORS[i]}${lead?' leading':''}" id="lbar-${opt.id}" style="width:0%"></div></div></div>`;
+  }).join('');
+  _rendered[key]=true;
+  requestAnimationFrame(()=>{ seg.opts.forEach((opt,i)=>{ const p=pct(id,opt.id); const bar=$((large?'pbar-':'lbar-')+opt.id); if(bar) setTimeout(()=>{bar.style.width=p+'%';},60+i*40); }); });
+}
+function updateLiveBars(containerId,segIdx,large=false){
+  const seg=DECK[segIdx]; if(!seg.opts) return; const id=seg.id, total=totalVotes(id), maxPct=Math.max(...seg.opts.map(o=>pct(id,o.id)),1);
+  seg.opts.forEach((opt,i)=>{
+    const p=pct(id,opt.id), cnt=(votes[id]&&votes[id][opt.id])||0, lead=p===maxPct&&total>0;
+    const bar=$((large?'pbar-':'lbar-')+opt.id); if(!bar) return;
+    bar.style.width=p+'%'; bar.className=`${large?'proj-fill':'live-fill'} ${OPT_COLORS[i]}${lead?' leading':''}`;
+    const wrap=bar.closest(large?'.proj-bar-wrap':'.live-bar-wrap'); if(!wrap) return;
+    if(large){ const pe=wrap.querySelector('.proj-bar-pct'); if(pe){pe.textContent=p+'%';pe.style.color=lead?'var(--cyan)':'var(--text2)';} const ce=wrap.querySelector('div:last-child'); if(ce) ce.textContent=`${cnt} vote${cnt!==1?'s':''}`; }
+    else{ const pe=wrap.querySelector('.live-bar-pct'); if(pe) pe.textContent=p+'%'; const ce=wrap.querySelector('.live-bar-count'); if(ce) ce.textContent=cnt+'v'; }
+  });
+}
+function renderGaugesInto(containerId,mini=false,updateOnly=false){
+  const el=$(containerId); if(!el) return;
+  const defs=[['inno','INNOVATION','fill-c'],['priv','DATA STEWARDSHIP','fill-green'],['acc','RELIABILITY','fill-c'],['human','HUMAN CONTROL','fill-green']];
+  if(updateOnly && !mini){
+    defs.forEach(([k])=>{
+      const v=gaugeVal(k);
+      const fill=el.querySelector(`.gauge-fill[data-k="${k}"]`);
+      if(fill){ fill.style.width=v+'%'; fill.dataset.v=v; const pct=fill.closest('.gauge-item')?.querySelector('.cyan'); if(pct) pct.textContent=v+'%'; }
+    });
+    return;
+  }
+  if(mini){
+    el.innerHTML=defs.map(([k,label,cls])=>{ const v=gaugeVal(k); return `<div class="gauge-mini-item"><div class="gauge-mini-label">${label} · ${v}%</div><div class="gauge-mini-track"><div class="gauge-mini-fill ${cls}" style="width:${v}%"></div></div></div>`; }).join('');
+  } else {
+    el.innerHTML=defs.map(([k,label,cls])=>{ const v=gaugeVal(k); return `<div class="gauge-item"><div class="gauge-label"><span>${label}</span><span class="cyan">${v}%</span></div><div class="gauge-track"><div class="gauge-fill ${cls}" data-k="${k}" style="width:0%" data-v="${v}"></div></div></div>`; }).join('');
+    requestAnimationFrame(()=>{ qa('.gauge-fill',el).forEach(f=>setTimeout(()=>{f.style.width=f.dataset.v+'%';},80)); });
   }
 }
+function refreshAllLiveUI(){
+  const seg=DECK[S.idx]; if(!seg) return;
+  const total=seg.opts?totalVotes(seg.id):0;
+  ['fac-total-votes','proj-total'].forEach(id=>{ const el=$(id); if(el) el.textContent=total; });
+  if($('fac-live-bars') && $('facilitator').classList.contains('active') && seg.opts) renderLiveBars('fac-live-bars',S.idx);
+  if($('fac-gauge-mini') && $('facilitator').classList.contains('active')) renderGaugesInto('fac-gauge-mini',true);
+  if($('projector-screen').classList.contains('active')) renderProjector();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT / TICKER
+   ══════════════════════════════════════════════════════════════ */
+const BLINES=[{t:'INITIALIZING AI CONTROL ROOM',ok:false,d:0},{t:'Loading run of show...',ok:true,d:280},{t:'Establishing realtime uplink...',ok:true,d:560},{t:'Calibrating AI health gauges...',ok:true,d:840},{t:'Human oversight protocols verified...',ok:true,d:1120},{t:'SYSTEM ONLINE',ok:false,d:1420}];
+function runBoot(){
+  const ov=$('boot'),log=$('blog'),bar=$('bbar');
+  BLINES.forEach(({t,ok,d},i)=>{ setTimeout(()=>{ const div=document.createElement('div'); div.className='bline'+(ok?' ok':''); div.textContent='> '+t; log.appendChild(div); bar.style.width=Math.round(((i+1)/BLINES.length)*100)+'%'; },d); });
+  setTimeout(()=>{ ov.classList.add('out'); setTimeout(()=>ov.style.display='none',700); },2000);
+}
+const TICKS=['SYS > Uplink stable','SYS > Vote sync active','SYS > Human oversight required','SYS > Gauges calibrated','SYS > All nodes operational'];
+let ti=0;
+function startTicker(){ const els=qa('.ticker'); const tick=()=>{ const m=TICKS[ti%TICKS.length]; ti++; els.forEach(el=>el.innerHTML=`<span>${m}</span>`); }; tick(); setInterval(tick,3800); }
+
+/* ══════════════════════════════════════════════════════════════
+   SEGMENT (AUDIENCE) RENDERING
+   ══════════════════════════════════════════════════════════════ */
+// Routes an incoming state broadcast based on this tab's role.
+// The projector and facilitator tabs are also connected to Ably (so they stay in sync
+// if another device drives the show), but they must NEVER run the audience navigation
+// logic in onSegmentChanged — that's what was flipping the projector to the "look at
+// the main screen" holding card. Projector just re-renders itself; facilitator just
+// refreshes its own console state; only audience phones flip screens.
+function onStateSynced(){
+  if(IS_PROJECTOR){ renderProjector(); }
+  else if(IS_FACILITATOR){ renderFacilitator(); }
+  else{ onSegmentChanged(); }
+}
+function onSegmentChanged(){
+  const seg=DECK[S.idx];
+  if(!seg) return;
+  if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy'){
+    loadSegment(S.idx); showScreen('segment');
+  } else {
+    $('watch-note').textContent = seg.title ? ('Coming up: '+seg.title) : 'Stand by.';
+    showScreen('watch');
+  }
+}
+
+function loadSegment(idx){
+  const seg=DECK[idx];
+  $('sc-label').textContent=seg.type.toUpperCase();
+  $('sc-title').textContent=seg.label||seg.title||'';
+  $('sc-setup').textContent=seg.setup||seg.item||'';
+  $('sc-q').textContent=seg.q||'';
+  const list=$('opts'); list.innerHTML='';
+  (seg.opts||[]).forEach(o=>{
+    const b=document.createElement('button'); b.className='opt-btn'; b.dataset.id=o.id;
+    b.innerHTML=`<span class="opt-letter">OPTION ${o.id}</span><span>${esc(o.txt)}</span>`;
+    b.addEventListener('click',()=>selOpt(o.id));
+    list.appendChild(b);
+  });
+  $('cons-wrap').style.display='none';
+  $('voted-confirm').style.display='none';
+  // action buttons vary by type
+  const hasConsequence = seg.type==='scenario';
+  $('btn-reveal').style.display = hasConsequence?'inline-flex':'none';
+  $('btn-reveal').disabled=true;
+  $('btn-reset').style.display='inline-flex';
+  if(S.sel){
+    markSel(S.sel); $('btn-reveal').disabled=false;
+    $('voted-confirm').style.display='flex';
+  }
+}
+function markSel(id){ qa('.opt-btn').forEach(b=>b.classList.toggle('sel',b.dataset.id===id)); }
+
+function selOpt(id){
+  if(S.sel) return;
+  S.sel=id; save(); markSel(id);
+  qa('.opt-btn').forEach(b=>b.disabled=true);
+  toast('VOTE TRANSMITTED');
+  $('voted-confirm').style.display='flex';
+  const seg=DECK[S.idx];
+  let gauge=null;
+  if(seg.type==='scenario'){ const opt=seg.opts.find(o=>o.id===id); gauge=scenarioGaugeDelta(opt); $('btn-reveal').disabled=false; }
+  else if(seg.type==='traffic'){ const pickIdx=seg.opts.findIndex(o=>o.id===id); gauge=trafficGaugeDelta(pickIdx,seg.correct); }
+  else if(seg.type==='poll'){ const opt=seg.opts.find(o=>o.id===id); gauge=opt.g||null; }
+  publishVote(seg.id,id,gauge);
+}
+
+function riskLabel(rsk){
+  if(rsk<25) return 'LOW';
+  if(rsk<50) return 'MODERATE';
+  if(rsk<75) return 'HIGH';
+  return 'CRITICAL';
+}
+function revealCons(){
+  const seg=DECK[S.idx], opt=(seg.opts||[]).find(o=>o.id===S.sel); if(!opt) return;
+  $('cons-opt').textContent=`Option ${opt.id} — ${opt.txt}`;
+  $('cons-out').textContent=opt.out||'';
+  const showRisk = typeof opt.rsk==='number';
+  $('cons-risk-panel').style.display = showRisk? 'block':'none';
+  if(showRisk){ $('cons-risk').textContent=riskLabel(opt.rsk); const bar=$('cons-rbar'); bar.style.width='0%'; setTimeout(()=>{bar.style.width=opt.rsk+'%';},100); }
+  const cw=$('cons-wrap'); cw.style.display='flex';
+  qa('.rev1,.rev2,.rev3',cw).forEach(el=>{ el.style.animation='none'; void el.offsetHeight; el.style.animation=''; });
+  $('btn-to-prompt').style.display = seg.pTask ? 'inline-flex':'none';
+  $('btn-done-noprompt').style.display = seg.pTask ? 'none':'inline-flex';
+  setTimeout(()=>{ cw.scrollIntoView({behavior:'smooth',block:'start'}); },200);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PROMPT / EVAL
+   ══════════════════════════════════════════════════════════════ */
+function loadPrompt(){
+  const seg=DECK[S.idx];
+  $('prompt-sc-lbl').textContent=seg.label||'';
+  $('prompt-task').textContent=seg.pTask||'';
+  const frame = seg.pFrame && S.sel ? seg.pFrame[S.sel] : null;
+  if(frame){ $('prompt-frame-panel').style.display='block'; $('prompt-frame-text').textContent=frame; }
+  else{ $('prompt-frame-panel').style.display='none'; }
+  $('prompt-ta').value=''; $('prompt-ta').disabled=false; $('btn-submit').disabled=false;
+  $('eval-panel').style.display='none'; $('eval-analyzing').style.display='flex'; $('eval-result').style.display='none';
+}
+async function submitPrompt(){
+  const txt=$('prompt-ta').value.trim(); if(!txt){toast('TYPE AN ASSIGNMENT FIRST');return;}
+  const seg=DECK[S.idx];
+  const entry={sid:seg.id,sl:seg.label,txt,ts:new Date().toISOString()};
+  S.prompts.push(entry); save();
+  if(voteChannel){ try{ await voteChannel.publish('prompt',entry); }catch(e){} }
+  $('btn-submit').disabled=true; $('prompt-ta').disabled=true;
+  const ep=$('eval-panel'); ep.style.display='flex'; $('eval-analyzing').style.display='flex'; $('eval-result').style.display='none';
+  ep.scrollIntoView({behavior:'smooth',block:'start'});
+  const statusMsgs=['REVIEWING THE JOB...','CHECKING THE TASK...','CHECKING CONTEXT...','CHECKING BOUNDARIES...','CHECKING VERIFICATION...'];
+  let si=0; const stTick=setInterval(()=>{ si=(si+1)%statusMsgs.length; $('eval-status-txt').textContent=statusMsgs[si]; },1400);
+  const sysP=`You are evaluating how well someone has given AI a job to do, for a live conference exercise called AI Control Room. The lesson: a mediocre result usually isn't about wording — it means the person hasn't clearly defined AI's role, its authority, the source material, what it cannot assume, or what a human must still verify.\nThe scenario is: "${seg.label}" — ${seg.setup}\nThe job they were asked to give AI is: "${seg.pTask}"\nAn example of a strong assignment is: "${seg.pSample}"\n\nEvaluate the user's submitted assignment and respond ONLY with a valid JSON object — no markdown, no explanation outside JSON.\nUse this exact structure:\n{\n  "score": <integer 0-100>,\n  "grade": "<one of: CRITICAL FAILURE | NEEDS WORK | ACCEPTABLE | STRONG | EXCEPTIONAL>",\n  "dimensions": [\n    {"name":"Task","score":<0-100>,"note":"<one short sentence on whether AI would understand exactly what it's doing>"},\n    {"name":"Context","score":<0-100>,"note":"<one short sentence on whether AI has what it needs to do the job well>"},\n    {"name":"Boundaries","score":<0-100>,"note":"<one short sentence on whether AI knows what it should NOT do or assume>"},\n    {"name":"Verification","score":<0-100>,"note":"<one short sentence on whether it's clear what a human must still check>"}\n  ],\n  "feedback": "<2-3 sentences of direct, specific feedback>",\n  "improve": "<2-3 concrete, actionable suggestions>"\n}`;
+  let evalData=null;
+  try{
+    const resp=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemPrompt:sysP,userPrompt:`Please evaluate this assignment given to AI:\n\n"${txt}"`})});
+    const data=await resp.json(); const raw=data.content?.[0]?.text||''; evalData=JSON.parse(raw.replace(/```json|```/g,'').trim());
+  }catch(e){ console.error(e); }
+  clearInterval(stTick); $('eval-analyzing').style.display='none';
+  if(!evalData){
+    $('eval-result').style.display='flex'; $('eval-score').textContent='—'; $('eval-grade-label').textContent='API UNAVAILABLE';
+    $('eval-feedback').textContent='Could not reach the evaluation API. Your prompt has been logged.'; $('eval-improve').textContent='Check your connection and try again.'; $('eval-dims').innerHTML=''; return;
+  }
+  const score=Math.max(0,Math.min(100,evalData.score||0)); $('eval-score').textContent=score;
+  const gColors={'EXCEPTIONAL':'#00e5ff','STRONG':'#10b981','ACCEPTABLE':'#f59e0b','NEEDS WORK':'#ef4444','CRITICAL FAILURE':'#dc2626'};
+  const gClass={'EXCEPTIONAL':'fill-c','STRONG':'fill-green','ACCEPTABLE':'','NEEDS WORK':'fill-r','CRITICAL FAILURE':'fill-r'};
+  const grade=evalData.grade||'ACCEPTABLE', gc=gColors[grade]||'#8bb8d4';
+  $('eval-score').style.color=gc; $('eval-score').style.textShadow=`0 0 24px ${gc}80`;
+  $('eval-grade-label').textContent=grade; $('eval-grade-label').style.color=gc;
+  const bar=$('eval-score-bar'); bar.className='pg-fill '+(gClass[grade]||'fill-c'); setTimeout(()=>{bar.style.width=score+'%';},80);
+  const dims=evalData.dimensions||[];
+  $('eval-dims').innerHTML=dims.map(d=>{ const p=Math.max(0,Math.min(100,d.score||0)); const col=p>=70?'fill-c':p>=45?'':'fill-r'; return `<div class="pg-wrap"><div class="pg-label"><span>${d.name}</span><span class="cyan">${p}</span></div><div class="pg-track"><div class="pg-fill ${col}" data-pct="${p}" style="width:0%"></div></div><div style="font-family:var(--mono);font-size:.62rem;color:var(--textm);margin-top:.22rem;">${d.note||''}</div></div>`; }).join('');
+  requestAnimationFrame(()=>{ qa('#eval-dims .pg-fill[data-pct]').forEach(f=>setTimeout(()=>{f.style.width=f.dataset.pct+'%';},100)); });
+  $('eval-feedback').textContent=evalData.feedback||''; $('eval-improve').textContent=evalData.improve||'';
+  $('eval-result').style.display='flex'; $('eval-result').style.animation='up .5s ease both';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   POLICY GENERATION
+   ══════════════════════════════════════════════════════════════ */
+async function generatePolicy(){
+  const qIds=['pq1','pq2','pq3','pq4'];
+  const tallies=qIds.map(id=>{
+    const seg=DECK.find(d=>d.id===id); const v=votes[id]||{};
+    const lines=seg.opts.map(o=>`  ${o.id}) "${o.txt}" — ${v[o.id]||0} votes`).join('\n');
+    return `Q: ${seg.q}\n${lines}`;
+  }).join('\n\n');
+  toast('GENERATING PRINCIPLES...');
+  const sysP=`You are drafting a short "Responsible AI Principles" document for a room of public-sector professionals at the NLC-RISC conference, based on their live votes during a session on AI governance. Do not simply restate the majority answer for each question as a principle — synthesize genuine guidance.\n\nFor each question, identify the room's lean AND how close the vote was. If a vote was closer than roughly 65/35, name that tension explicitly as something this specific organization still needs to talk through, rather than presenting false consensus.\n\nWhere it fits naturally, connect a principle to language already used in this session: the Green/Yellow/Red framework (use freely / use carefully / stop or reframe), or the Four-Question Guardrail (Data — what am I giving it; Decision — what am I asking it to do; Environment — where is it going; Double-Check — what must a human verify).\n\nWrite 6-8 short, plain-language principles. At least 2 of them should go beyond a flat restatement of the vote by adding one sentence of practical guidance or a boundary case. Respond ONLY with a JSON object: {"title":"<short title>","principles":["<principle 1>","<principle 2>", ...]}`;
+  try{
+    const resp=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemPrompt:sysP,userPrompt:tallies})});
+    const data=await resp.json(); const raw=data.content?.[0]?.text||''; const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const text=(parsed.title?`${parsed.title}\n\n`:'')+ (parsed.principles||[]).map((p,i)=>`${i+1}. ${p}`).join('\n');
+    await broadcastPolicyResult(text);
+    toast('PRINCIPLES GENERATED');
+    renderFacPreview();
+  }catch(e){ console.error(e); toast('GENERATION FAILED — CHECK API'); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FACILITATOR
+   ══════════════════════════════════════════════════════════════ */
+function toggleSample(){ const b=$('sample-body'),c=$('sample-chevron'); const open=b.style.display==='none'; b.style.display=open?'block':'none'; c.style.transform=open?'rotate(180deg)':'rotate(0deg)'; }
+
+function typeIcon(t){ return {slide:'slide',scenario:'scenario',traffic:'traffic',poll:'traffic',policy:'policy','policy-reveal':'special','health-reveal':'special'}[t]||'slide'; }
+function renderROS(){
+  const list=$('ros-list'); list.innerHTML='';
+  const priLabel={must:'MUST RUN',runiftime:'RUN IF ON TIME',optional:'OPTIONAL — CUT FIRST'};
+  DECK.forEach((seg,i)=>{
+    const div=document.createElement('div');
+    div.className='ros-item'+(i===S.idx?' live':'');
+    const pri=seg.priority||'must';
+    div.innerHTML=`<span class="ros-idx">${String(i+1).padStart(2,'0')}</span><span class="ros-pri ${pri}" title="${priLabel[pri]}"></span><span class="ros-type ${typeIcon(seg.type)}">${seg.type}</span><span class="ros-title">${esc(seg.label||seg.title||seg.id)}</span><span class="ros-min">${seg.min||''}m</span>`;
+    div.addEventListener('click',()=>jumpTo(i));
+    list.appendChild(div);
+  });
+}
+function jumpTo(i){ S.idx=i; S.sel=null; save(); broadcastSegment(i); renderFacilitator(); toast('LIVE: '+(DECK[i].label||DECK[i].title||'')); }
+
+function renderFacPreview(){
+  const seg=DECK[S.idx];
+  $('fac-prev-t').textContent=(seg.label||seg.title||'')+`  ·  [${seg.type}]`;
+  $('fac-prev-s').textContent=seg.setup||seg.item||seg.callout||(seg.bullets?seg.bullets.join(' · '):'');
+  const cues = (typeof seg.notes==='string') ? {say:seg.notes} : (seg.notes||null);
+  const cueKeys=['say','ask','reveal','land'];
+  const anyCue = cues && cueKeys.some(k=>cues[k]);
+  $('fac-prev-notes-wrap').style.display = anyCue ? 'block' : 'none';
+  cueKeys.forEach(k=>{
+    const el=$('fac-cue-'+k);
+    if(cues && cues[k]){ el.style.display='flex'; el.querySelector('.cue-text').textContent=cues[k]; }
+    else{ el.style.display='none'; }
+  });
+  $('fac-policy-action').style.display = seg.type==='policy-reveal' ? 'block':'none';
+  if(seg.type==='policy-reveal' && policyResult){ $('fac-prev-s').textContent = policyResult.split('\n').join(' · '); }
+  $('fac-sample-panel').style.display = seg.pSample ? 'block':'none';
+  if(seg.pSample) $('fac-sample').textContent=seg.pSample;
+  $('fac-subs-panel').style.display = seg.pTask ? 'block':'none';
+  $('fac-gauge-panel').style.display = (seg.type==='health-reveal'||true) ? 'block':'none';
+}
+function renderFacilitator(){
+  renderROS(); renderFacPreview(); renderSubs();
+  const seg=DECK[S.idx];
+  if(seg.opts){ renderLiveBars('fac-live-bars',S.idx); $('fac-total-votes').textContent=totalVotes(seg.id); $('fac-live-bars').style.display='block'; }
+  else { $('fac-live-bars').innerHTML='<div class="empty-st">No live vote for this item</div>'; $('fac-total-votes').textContent='0'; }
+  renderGaugesInto('fac-gauge-mini',true);
+}
+function renderSubs(){
+  const seg=DECK[S.idx];
+  const items=S.prompts.filter(p=>p.sid===seg.id).slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  const list=$('fac-subs');
+  if(!items.length){ list.innerHTML='<div class="empty-st">NO SUBMISSIONS YET</div>'; return; }
+  list.innerHTML=items.map(p=>`<div class="sub-item"><div class="sub-meta">${esc(p.sl)} · ${fmtT(p.ts)}</div>${esc(p.txt)}</div>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PROJECTOR
+   ══════════════════════════════════════════════════════════════ */
+function renderProjector(){
+  const seg=DECK[S.idx]; if(!seg) return;
+  $('proj-kicker').textContent = seg.type==='slide' ? 'AI CONTROL ROOM' : (seg.kicker||seg.label||'AI CONTROL ROOM').toUpperCase();
+  const body=$('proj-body');
+  $('proj-vote-count').style.display = seg.opts ? 'flex':'none';
+  if(seg.opts) $('proj-total').textContent=totalVotes(seg.id);
+  const footerQR=$('proj-footer-qr'); if(footerQR) footerQR.style.display = seg.showQR ? 'none' : 'inline-block';
+
+  if(seg.type==='slide'){
+    _lastProjBarsFor=null;
+    let html=`<div class="slide-kicker">${esc(seg.kicker||'')}</div><div class="slide-title">${esc(seg.title||'')}</div>`;
+    if(seg.columns){ html+=`<div class="slide-cols">${seg.columns.map(c=>`<div class="slide-col"><h3>${esc(c.h)}</h3><p>${esc(c.d)}</p></div>`).join('')}</div>`; }
+    if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
+    if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
+    if(seg.showQR){
+      const contact=[seg.presenterPhone,seg.presenterEmail].filter(Boolean).join('  ·  ');
+      html+=`<div class="proj-wait-row">
+        <div class="proj-presenter">
+          ${seg.presenter?`<div class="name">${esc(seg.presenter)}</div>`:''}
+          ${seg.presenterTitle?`<div class="title">${esc(seg.presenterTitle)}</div>`:''}
+          ${contact?`<div class="contact">${esc(contact)}</div>`:''}
+        </div>
+        <div class="proj-qr-block">
+          <div class="scan-note">${esc(seg.qrLabel||'Scan to join on your phone')}</div>
+          <div class="proj-wait-qr"><img src="images/AI-Interactive-QR.png" alt="Scan to join"/></div>
+          ${seg.qrUrl?`<div class="qr-url-note">or go to ${esc(seg.qrUrl)}</div>`:''}
+        </div>
+      </div>`;
+    }
+    body.innerHTML=html; body.style.justifyContent='flex-start';
+  } else if(seg.type==='scenario' || seg.type==='traffic' || seg.type==='poll' || seg.type==='policy'){
+    if(_lastProjBarsFor!==seg.id){
+      body.style.justifyContent='center';
+      body.innerHTML=`<div class="proj-input-badge">📱 Grab your phone — vote now</div><div class="proj-q">${esc(seg.q||seg.item||'')}</div><div id="proj-bars-inner"></div>`;
+      delete _rendered['proj-bars-inner:'+S.idx]; // force a fresh full render into the newly-created container
+      _lastProjBarsFor=seg.id;
+    }
+    renderLiveBars('proj-bars-inner',S.idx,true);
+  } else if(seg.type==='policy-reveal'){
+    _lastProjBarsFor=null;
+    body.style.justifyContent='center';
+    body.innerHTML = policyResult
+      ? `<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">📜 Your Room's AI Principles</div><div style="font-family:var(--body);font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text2);line-height:1.9;white-space:pre-line;">${esc(policyResult)}</div>`
+      : `<div class="watch-card"><div class="disp cyan" style="font-size:1rem;letter-spacing:.1em;">WAITING FOR FACILITATOR TO GENERATE...</div></div>`;
+  } else if(seg.type==='health-reveal'){
+    if(_lastProjBarsFor!=='health-reveal'){
+      body.style.justifyContent='center';
+      body.innerHTML=`<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">How Did We Balance AI?</div><div class="gauge-row" id="gauge-row-inner"></div>`;
+      _lastProjBarsFor='health-reveal';
+      renderGaugesInto('gauge-row-inner',false);
+    } else {
+      renderGaugesInto('gauge-row-inner',false,true); // already mounted — update widths in place, no re-animate
+    }
+  }
+}
+function toggleFullscreen(){
+  if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); }
+  else{ document.exitFullscreen(); }
+}
+function showProjector(){ renderProjector(); showScreen('projector-screen'); }
+
+/* ══════════════════════════════════════════════════════════════
+   POLLING (keeps totals/gauges fresh even without new votes)
+   ══════════════════════════════════════════════════════════════ */
+let _pollTimer=null;
+function startPolling(){
+  if(_pollTimer) clearInterval(_pollTimer);
+  _pollTimer=setInterval(()=>{
+    if($('facilitator').classList.contains('active')) refreshAllLiveUI();
+    if($('projector-screen').classList.contains('active')) renderProjector();
+  },2000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  const isProjector=new URLSearchParams(window.location.search).get('projector')==='true';
+  if(isProjector){ $('boot').style.display='none'; } else { runBoot(); }
+  startTicker(); updateConnUI('disconnected'); startPolling();
+
+  (async()=>{
+    try{ const r=await fetch('/api/config'); if(r.ok){ const cfg=await r.json(); if(cfg.ablyKey) ABLY_KEY=cfg.ablyKey; } }catch(e){}
+    if(ABLY_KEY) connectAbly(ABLY_KEY); else updateConnUI('disconnected');
+  })();
+
+  $('btn-connect').addEventListener('click',()=>{ onSegmentChanged(); if(stateChannel) stateChannel.publish('hello',{ts:Date.now()}); });
+  $('btn-sc-back').addEventListener('click',()=>showScreen('landing'));
+  $('btn-watch-back').addEventListener('click',()=>showScreen('landing'));
+  $('btn-reveal').addEventListener('click',revealCons);
+  $('btn-reset').addEventListener('click',()=>{ S.sel=null; save(); loadSegment(S.idx); });
+  $('btn-to-prompt').addEventListener('click',()=>{ loadPrompt(); showScreen('prompt-screen'); });
+  $('btn-done-noprompt').addEventListener('click',()=>showScreen('watch'));
+  $('btn-prompt-back').addEventListener('click',()=>showScreen('segment'));
+  $('btn-submit').addEventListener('click',submitPrompt);
+  $('btn-back-console2').addEventListener('click',()=>showScreen('watch'));
+
+  $('btn-fac-prev').addEventListener('click',()=>jumpTo(Math.max(0,S.idx-1)));
+  $('btn-fac-next').addEventListener('click',()=>jumpTo(Math.min(DECK.length-1,S.idx+1)));
+  $('btn-fac-home').addEventListener('click',()=>showScreen('landing'));
+  $('btn-fac-reset').addEventListener('click',()=>{ if(!confirm('Reset votes for this item?'))return; broadcastReset(); renderFacilitator(); toast('VOTES RESET'); });
+  $('btn-refresh').addEventListener('click',()=>{ renderSubs(); toast('REFRESHED'); });
+  $('btn-generate-policy').addEventListener('click',generatePolicy);
+  $('btn-exit-proj').addEventListener('click',()=>{ const fromParam=new URLSearchParams(window.location.search).get('projector')==='true'; if(fromParam) window.close(); else showScreen('facilitator'); });
+
+  const urlParams=new URLSearchParams(window.location.search);
+  if(urlParams.get('projector')==='true'){ showProjector(); }
+  else{ onSegmentChanged(); }
+
+  const SECRET='mission'; let typed='';
+  document.addEventListener('keydown',e=>{
+    const tag=document.activeElement && document.activeElement.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA'){ typed=''; return; } // don't fire while someone's typing a prompt
+    if(IS_FACILITATOR || IS_PROJECTOR){ return; } // already in the right mode
+    if(e.key.length!==1){ typed=''; return; }
+    typed=(typed+e.key.toLowerCase()).slice(-SECRET.length);
+    if(typed===SECRET){ typed=''; IS_FACILITATOR=true; renderFacilitator(); showScreen('facilitator'); }
+  });
+});
+</script>
+</body>
+</html>
