@@ -703,8 +703,8 @@ const DECK = [
 
 {id:'thank-you',type:'slide',min:3,kicker:'THANK YOU',title:'Questions?',priority:'must',
  bullets:['Reach out anytime — happy to talk AI governance, guardrails, or how this session was built.'],
- showQR:true,presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',
- presenterPhone:'405-657-1428',presenterEmail:'mburleson@omag.org',qrLabel:'Scan to revisit the session',
+ presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',
+ presenterPhone:'405-657-1428',presenterEmail:'mburleson@omag.org',
  callout:'The goal was never to make you afraid of AI. It was to make you ready for it.',
  notes:{say:'Open the floor for Q&A.',land:'Leave this screen up as long as people are lingering — thank the room.'}},
 ];
@@ -1133,7 +1133,7 @@ function renderProjector(){
     if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
     if(seg.images){ html+=`<div class="slide-images">${seg.images.map(src=>`<img src="${esc(src)}" alt="Model comparison"/>`).join('')}</div>`; }
     if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
-    if(seg.showQR){
+    if(seg.presenter || seg.presenterTitle || seg.showQR){
       const contact=[seg.presenterPhone,seg.presenterEmail].filter(Boolean).join('  ·  ');
       html+=`<div class="proj-wait-row">
         <div class="proj-presenter">
@@ -1141,11 +1141,11 @@ function renderProjector(){
           ${seg.presenterTitle?`<div class="title">${esc(seg.presenterTitle)}</div>`:''}
           ${contact?`<div class="contact">${esc(contact)}</div>`:''}
         </div>
-        <div class="proj-qr-block">
+        ${seg.showQR?`<div class="proj-qr-block">
           <div class="scan-note">${esc(seg.qrLabel||'Scan to join on your phone')}</div>
           <div class="proj-wait-qr"><img src="images/AI-Interactive-QR.png" alt="Scan to join"/></div>
           ${seg.qrUrl?`<div class="qr-url-note">or go to ${esc(seg.qrUrl)}</div>`:''}
-        </div>
+        </div>`:''}
       </div>`;
     }
     body.innerHTML=html; body.style.justifyContent='flex-start';
