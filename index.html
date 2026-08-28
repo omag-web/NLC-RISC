@@ -662,12 +662,12 @@ const DECK = [
  bullets:['Your answers to the next four questions become the room\'s principles','No right answers — just decisions','Reasonable organizations land in different places on these, and that\'s fine'],
  notes:{say:'Set up the 4 policy questions.'}},
 
-{id:'pq1',type:'policy',min:1,label:'Policy Question 1/4',q:'Should employees be limited to approved AI platforms?',priority:'must',
- opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}]},
-{id:'pq2',type:'policy',min:1,label:'Policy Question 2/4',q:'Should consequential AI outputs require human review?',priority:'must',
- opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}]},
-{id:'pq3',type:'policy',min:1,label:'Policy Question 3/4',q:'Can sensitive organizational information be entered into personal AI accounts?',priority:'must',
- opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}]},
+{id:'pq1',type:'policy',min:1,label:'Policy Question 1/4',q:'Should employees be limited to organization-approved AI tools?',priority:'must',
+ opts:[{id:'A',txt:'Yes — approved tools only'},{id:'B',txt:'Approved tools for work data; anything for brainstorming'},{id:'C',txt:'No restriction — employee judgment'}]},
+{id:'pq2',type:'policy',min:1,label:'Policy Question 2/4',q:'Which AI outputs require human review before they\'re used?',priority:'must',
+ opts:[{id:'A',txt:'Everything, every time'},{id:'B',txt:'Only Yellow/Red-level work — data, HR, legal, high-impact decisions'},{id:'C',txt:'Only autonomous high-impact decisions'}]},
+{id:'pq3',type:'policy',min:1,label:'Policy Question 3/4',q:'Where\'s the line for sensitive organizational information?',priority:'must',
+ opts:[{id:'A',txt:'Never leaves an approved, org-controlled environment'},{id:'B',txt:'Anonymized or aggregated data is fine anywhere'},{id:'C',txt:'Case-by-case, based on who\'s asking'}]},
 {id:'pq4',type:'policy',min:1,label:'Policy Question 4/4',q:'Does using AI transfer accountability away from the employee who used it?',priority:'must',
  opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}],
  notes:{reveal:'Expect close to unanimous NO.',land:'That sets up the closing beautifully.'}},
@@ -1032,7 +1032,7 @@ async function generatePolicy(){
     return `Q: ${seg.q}\n${lines}`;
   }).join('\n\n');
   toast('GENERATING PRINCIPLES...');
-  const sysP=`You are drafting a short "Responsible AI Principles" document for a room of public-sector professionals (NLC-RISC conference) based on their live votes tonight. Given the vote tallies below, write 6-7 short, plain-language principles that reflect the room's collective decisions — pick the majority answer for each question as the basis. Respond ONLY with a JSON object: {"title":"<short title>","principles":["<principle 1>","<principle 2>", ...]}`;
+  const sysP=`You are drafting a short "Responsible AI Principles" document for a room of public-sector professionals at the NLC-RISC conference, based on their live votes during a session on AI governance. Do not simply restate the majority answer for each question as a principle — synthesize genuine guidance.\n\nFor each question, identify the room's lean AND how close the vote was. If a vote was closer than roughly 65/35, name that tension explicitly as something this specific organization still needs to talk through, rather than presenting false consensus.\n\nWhere it fits naturally, connect a principle to language already used in this session: the Green/Yellow/Red framework (use freely / use carefully / stop or reframe), or the Four-Question Guardrail (Data — what am I giving it; Decision — what am I asking it to do; Environment — where is it going; Double-Check — what must a human verify).\n\nWrite 6-8 short, plain-language principles. At least 2 of them should go beyond a flat restatement of the vote by adding one sentence of practical guidance or a boundary case. Respond ONLY with a JSON object: {"title":"<short title>","principles":["<principle 1>","<principle 2>", ...]}`;
   try{
     const resp=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemPrompt:sysP,userPrompt:tallies})});
     const data=await resp.json(); const raw=data.content?.[0]?.text||''; const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
