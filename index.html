@@ -290,10 +290,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <div style="display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;" class="green-c">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>VOTE TRANSMITTED
     </div>
-  </div>
-  <div id="seg-live-wrap" style="display:none;flex-direction:column;width:100%;gap:.4rem;">
-    <div class="slabel" style="margin-bottom:0;">LIVE RESULTS</div>
-    <div id="seg-live-bars"></div>
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);">Look at the main screen for live results.</div>
   </div>
   <div style="display:flex;flex-wrap:wrap;gap:.65rem;width:100%;" id="sc-actions">
     <button class="btn btn-p" id="btn-reveal" disabled>Reveal Consequences</button>
@@ -849,13 +846,21 @@ function updateLiveBars(containerId,segIdx,large=false){
     else{ const pe=wrap.querySelector('.live-bar-pct'); if(pe) pe.textContent=p+'%'; const ce=wrap.querySelector('.live-bar-count'); if(ce) ce.textContent=cnt+'v'; }
   });
 }
-function renderGaugesInto(containerId,mini=false){
+function renderGaugesInto(containerId,mini=false,updateOnly=false){
   const el=$(containerId); if(!el) return;
   const defs=[['inno','INNOVATION','fill-c'],['priv','DATA STEWARDSHIP','fill-green'],['acc','RELIABILITY','fill-c'],['human','HUMAN CONTROL','fill-green']];
+  if(updateOnly && !mini){
+    defs.forEach(([k])=>{
+      const v=gaugeVal(k);
+      const fill=el.querySelector(`.gauge-fill[data-k="${k}"]`);
+      if(fill){ fill.style.width=v+'%'; fill.dataset.v=v; const pct=fill.closest('.gauge-item')?.querySelector('.cyan'); if(pct) pct.textContent=v+'%'; }
+    });
+    return;
+  }
   if(mini){
     el.innerHTML=defs.map(([k,label,cls])=>{ const v=gaugeVal(k); return `<div class="gauge-mini-item"><div class="gauge-mini-label">${label} · ${v}%</div><div class="gauge-mini-track"><div class="gauge-mini-fill ${cls}" style="width:${v}%"></div></div></div>`; }).join('');
   } else {
-    el.innerHTML=defs.map(([k,label,cls])=>{ const v=gaugeVal(k); return `<div class="gauge-item"><div class="gauge-label"><span>${label}</span><span class="cyan">${v}%</span></div><div class="gauge-track"><div class="gauge-fill ${cls}" style="width:0%" data-v="${v}"></div></div></div>`; }).join('');
+    el.innerHTML=defs.map(([k,label,cls])=>{ const v=gaugeVal(k); return `<div class="gauge-item"><div class="gauge-label"><span>${label}</span><span class="cyan">${v}%</span></div><div class="gauge-track"><div class="gauge-fill ${cls}" data-k="${k}" style="width:0%" data-v="${v}"></div></div></div>`; }).join('');
     requestAnimationFrame(()=>{ qa('.gauge-fill',el).forEach(f=>setTimeout(()=>{f.style.width=f.dataset.v+'%';},80)); });
   }
 }
@@ -866,7 +871,6 @@ function refreshAllLiveUI(){
   if($('fac-live-bars') && $('facilitator').classList.contains('active') && seg.opts) renderLiveBars('fac-live-bars',S.idx);
   if($('fac-gauge-mini') && $('facilitator').classList.contains('active')) renderGaugesInto('fac-gauge-mini',true);
   if($('projector-screen').classList.contains('active')) renderProjector();
-  if($('segment').classList.contains('active') && S.sel && seg.opts) renderLiveBars('seg-live-bars',S.idx);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -922,7 +926,6 @@ function loadSegment(idx){
   });
   $('cons-wrap').style.display='none';
   $('voted-confirm').style.display='none';
-  $('seg-live-wrap').style.display='none';
   // action buttons vary by type
   const hasConsequence = seg.type==='scenario';
   $('btn-reveal').style.display = hasConsequence?'inline-flex':'none';
@@ -931,7 +934,6 @@ function loadSegment(idx){
   if(S.sel){
     markSel(S.sel); $('btn-reveal').disabled=false;
     $('voted-confirm').style.display='flex';
-    if(seg.opts){ $('seg-live-wrap').style.display='flex'; renderLiveBars('seg-live-bars',idx); }
   }
 }
 function markSel(id){ qa('.opt-btn').forEach(b=>b.classList.toggle('sel',b.dataset.id===id)); }
@@ -947,7 +949,6 @@ function selOpt(id){
   if(seg.type==='scenario'){ const opt=seg.opts.find(o=>o.id===id); gauge=scenarioGaugeDelta(opt); $('btn-reveal').disabled=false; }
   else if(seg.type==='traffic'){ const pickIdx=seg.opts.findIndex(o=>o.id===id); gauge=trafficGaugeDelta(pickIdx,seg.correct); }
   else if(seg.type==='poll'){ const opt=seg.opts.find(o=>o.id===id); gauge=opt.g||null; }
-  if(seg.opts){ $('seg-live-wrap').style.display='flex'; renderLiveBars('seg-live-bars',S.idx); }
   publishVote(seg.id,id,gauge);
 }
 
@@ -1142,10 +1143,14 @@ function renderProjector(){
       ? `<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">📜 Your Room's AI Principles</div><div style="font-family:var(--body);font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text2);line-height:1.9;white-space:pre-line;">${esc(policyResult)}</div>`
       : `<div class="watch-card"><div class="disp cyan" style="font-size:1rem;letter-spacing:.1em;">WAITING FOR FACILITATOR TO GENERATE...</div></div>`;
   } else if(seg.type==='health-reveal'){
-    _lastProjBarsFor=null;
-    body.style.justifyContent='center';
-    body.innerHTML=`<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">How Did We Balance AI?</div><div class="gauge-row" id="gauge-row-inner"></div>`;
-    renderGaugesInto('gauge-row-inner',false);
+    if(_lastProjBarsFor!=='health-reveal'){
+      body.style.justifyContent='center';
+      body.innerHTML=`<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">How Did We Balance AI?</div><div class="gauge-row" id="gauge-row-inner"></div>`;
+      _lastProjBarsFor='health-reveal';
+      renderGaugesInto('gauge-row-inner',false);
+    } else {
+      renderGaugesInto('gauge-row-inner',false,true); // already mounted — update widths in place, no re-animate
+    }
   }
 }
 function toggleFullscreen(){
