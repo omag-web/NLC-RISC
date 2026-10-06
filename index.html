@@ -86,7 +86,9 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .fill-r{background:linear-gradient(90deg,var(--amber),var(--red));box-shadow:0 0 10px rgba(245,158,11,.5);}
 .fill-green{background:linear-gradient(90deg,#059669,var(--green));box-shadow:0 0 10px rgba(16,185,129,.4);}
 .live-bar-wrap{margin-bottom:1.1rem;position:relative;}
-.live-bar-label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:.72rem;color:var(--text2);margin-bottom:.4rem;}
+.live-bar-label{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;font-family:var(--mono);font-size:.72rem;color:var(--text2);margin-bottom:.4rem;}
+.live-bar-label > span:first-child{flex:1;min-width:0;line-height:1.45;}
+.live-bar-label > span:last-child{flex-shrink:0;white-space:nowrap;}
 .live-bar-pct{font-family:var(--disp);font-size:1.1rem;font-weight:700;color:var(--cyan);}
 .live-bar-count{font-size:.6rem;color:var(--textm);margin-left:.4rem;}
 .live-track{height:14px;background:rgba(255,255,255,.04);border-radius:7px;overflow:hidden;border:1px solid var(--border);}
@@ -947,7 +949,7 @@ function renderLiveBars(containerId,segIdx,large=false){
     if(large){
       return `<div class="proj-bar-wrap"><div class="proj-bar-label"><span><strong style="color:var(--cyan);">${opt.id}</strong>&nbsp;${esc(opt.txt)}</span><span class="proj-bar-pct" style="color:${lead?'var(--cyan)':'var(--text2)'}">${p}%</span></div><div class="proj-track"><div class="proj-fill ${OPT_COLORS[i]}${lead?' leading':''}" id="pbar-${opt.id}" style="width:0%"></div></div><div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);margin-top:.3rem;">${cnt} vote${cnt!==1?'s':''}</div></div>`;
     }
-    return `<div class="live-bar-wrap"><div class="live-bar-label"><span><strong class="cyan">${opt.id}</strong>&nbsp;<span style="font-size:.82rem;">${esc(opt.txt).substring(0,54)}</span>${lead&&total>0?'<span class="live-winner-tag">LEADING</span>':''}</span><span><span class="live-bar-pct">${p}%</span><span class="live-bar-count">${cnt}v</span></span></div><div class="live-track"><div class="live-fill ${OPT_COLORS[i]}${lead?' leading':''}" id="lbar-${opt.id}" style="width:0%"></div></div></div>`;
+    return `<div class="live-bar-wrap"><div class="live-bar-label"><span><strong class="cyan">${opt.id}</strong>&nbsp;<span style="font-size:.82rem;">${esc(opt.txt)}</span>${lead&&total>0?'<span class="live-winner-tag">LEADING</span>':''}</span><span><span class="live-bar-pct">${p}%</span><span class="live-bar-count">${cnt}v</span></span></div><div class="live-track"><div class="live-fill ${OPT_COLORS[i]}${lead?' leading':''}" id="lbar-${opt.id}" style="width:0%"></div></div></div>`;
   }).join('');
   _rendered[key]=true;
   requestAnimationFrame(()=>{ seg.opts.forEach((opt,i)=>{ const p=pct(id,opt.id); const bar=$((large?'pbar-':'lbar-')+opt.id); if(bar) setTimeout(()=>{bar.style.width=p+'%';},60+i*40); }); });
