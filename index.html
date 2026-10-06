@@ -145,6 +145,12 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .proj-title{font-family:var(--disp);font-size:clamp(1.4rem,3vw,2.2rem);font-weight:900;color:#fff;letter-spacing:.04em;}
 .proj-q{font-family:var(--disp);font-size:clamp(1.05rem,2.1vw,1.6rem);font-weight:700;color:var(--cyan);letter-spacing:.03em;margin-bottom:.5rem;}
 .proj-input-badge{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:clamp(.7rem,1.3vw,.95rem);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:.5rem 1.1rem;margin-bottom:1.1rem;}
+.proj-setup{max-width:85ch;font-family:var(--body);font-weight:500;font-size:clamp(1.1rem,2vw,1.6rem);line-height:1.55;color:var(--text2);border-left:3px solid var(--borderg);padding:.15rem 0 .15rem 1.1rem;margin-bottom:1rem;}
+.proj-setup.long{font-size:clamp(1rem,1.65vw,1.35rem);line-height:1.5;}
+.proj-setup.lead{border-left:none;padding-left:0;margin-bottom:.35rem;font-family:var(--mono);font-size:clamp(.75rem,1.2vw,.95rem);letter-spacing:.12em;text-transform:uppercase;color:var(--textm);}
+.proj-vote.compact .proj-bar-wrap{margin-bottom:.8rem;}
+.proj-vote.compact .proj-track{height:20px;}
+.proj-vote.compact .proj-input-badge{margin-bottom:.8rem;}
 .proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
 .proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
 .proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
@@ -1246,7 +1252,12 @@ function renderProjector(){
     const barsKey = seg.id + ':' + qText;
     if(_lastProjBarsFor!==barsKey){
       body.style.justifyContent='center';
-      body.innerHTML=`<div class="proj-input-badge">📱 Grab your phone — vote now</div><div class="proj-q">${esc(qText)}</div><div id="proj-bars-inner"></div>`;
+      // Context/setup text (scenarios + some polls). Traffic rounds already use their item as the question, so skip it there.
+      const setup = (seg.type==='bonus-traffic' || seg.type==='traffic') ? '' : (seg.setup||'');
+      const isLead = setup && setup.length < 40;          // short lead-ins like "Before we start —"
+      const isLong = setup.length > 240;
+      const setupHtml = setup ? `<div class="proj-setup${isLead?' lead':''}${isLong?' long':''}">${esc(setup)}</div>` : '';
+      body.innerHTML=`<div class="proj-vote${isLong?' compact':''}" style="width:100%;"><div class="proj-input-badge">📱 Grab your phone — vote now</div>${setupHtml}<div class="proj-q">${esc(qText)}</div><div id="proj-bars-inner"></div></div>`;
       delete _rendered['proj-bars-inner:'+S.idx]; // force a fresh full render into the newly-created container
       _lastProjBarsFor=barsKey;
     }
