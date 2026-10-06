@@ -784,6 +784,7 @@ const DECK = [
 
 {id:'closing',type:'slide',min:1,kicker:'CLOSING',title:'Know the Tool. Know the Edges. Build the Guardrails.',priority:'must',
  bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment','None of this requires you to be an AI expert — it requires you to be clear about where the line is'],
+ source:'Session handout: link.omag.org/NLC-RISC-Handout',
  callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',
  notes:{say:'You do not have to become an AI expert to help your organization use AI responsibly. Know what tool you are using. Know where its edges are. Establish clear guardrails. Then give people room to experiment inside them.',ask:'As you go back to your organization, what is one AI boundary or decision that needs to become clearer?',reveal:'Point back to the resource QR and remind them that the frameworks and session materials are available there.',land:'Good guardrails do not prevent experimentation. They make responsible experimentation possible. Thank you.'}},
 
@@ -791,6 +792,7 @@ const DECK = [
  bullets:['Reach out anytime — happy to talk AI governance, guardrails, or how this session was built.'],
  presenter:'Matt Burleson',presenterTitle:'OMAG · Digital Engagement & Media Manager',
  presenterPhone:'405-657-1428',presenterEmail:'mburleson@omag.org',
+ showQR:true,qrImg:'images/Handout-QR.png',qrLabel:'Scan for the session handout',qrUrl:'link.omag.org/NLC-RISC-Handout',
  callout:'The goal was never to make you afraid of AI. It was to make you ready for it.',
  notes:{say:'Open the floor for Q&A.',land:'Leave this screen up as long as people are lingering — thank the room.'}},
 ];
@@ -1331,7 +1333,7 @@ function renderProjector(){
         </div>
         ${seg.showQR?`<div class="proj-qr-block">
           <div class="scan-note">${esc(seg.qrLabel||'Scan to join on your phone')}</div>
-          <div class="proj-wait-qr"><img src="images/AI-Interactive-QR.png" alt="Scan to join"/></div>
+          <div class="proj-wait-qr"><img src="${esc(seg.qrImg||'images/AI-Interactive-QR.png')}" alt="${esc(seg.qrLabel||'Scan to join')}"/></div>
           ${seg.qrUrl?`<div class="qr-url-note">or go to ${esc(seg.qrUrl)}</div>`:''}
         </div>`:''}
       </div>`;
