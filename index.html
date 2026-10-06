@@ -186,6 +186,10 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .br-legend{list-style:none;width:clamp(240px,24vw,380px);display:flex;flex-direction:column;gap:.7rem;margin:0;padding:0;flex-shrink:0;}
 .br-legend li{display:flex;gap:.7rem;align-items:flex-start;font-family:var(--body);font-weight:600;font-size:clamp(.9rem,1.4vw,1.2rem);color:var(--text);line-height:1.35;}
 .br-legend .n{flex-shrink:0;width:1.6em;height:1.6em;display:grid;place-items:center;background:var(--red);color:#fff;border-radius:50%;font-family:var(--mono);font-size:.85em;}
+.prompt-tips{list-style:none;display:flex;flex-direction:column;gap:.55rem;margin:0;padding:0;}
+.prompt-tips li{display:flex;flex-direction:column;gap:.1rem;padding-left:.85rem;border-left:2px solid var(--cyan-dim);}
+.prompt-tips b{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);font-weight:400;}
+.prompt-tips span{font-size:.86rem;color:var(--text2);line-height:1.5;}
 .proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
 .proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
 .proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
@@ -336,7 +340,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <div style="display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;" class="green-c">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>VOTE TRANSMITTED
     </div>
-    <div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);">Look at the main screen for live results.</div>
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--textm);text-align:center;" id="voted-hint">Look at the main screen for live results.</div>
   </div>
   <div style="display:flex;flex-wrap:wrap;gap:.65rem;width:100%;" id="sc-actions">
     <button class="btn btn-p" id="btn-reveal" disabled>Reveal Consequences</button>
@@ -389,6 +393,14 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
   <div class="panel bkt w">
     <div class="slabel" id="prompt-mission-label">YOUR MISSION</div>
     <p style="font-size:.92rem;color:var(--text2);line-height:1.72;" id="prompt-task"></p>
+  </div>
+  <div class="panel w" id="prompt-source-panel" style="display:none;background:rgba(0,229,255,.05);border-color:rgba(0,229,255,.25);">
+    <div class="slabel">WHAT YOU WERE HANDED</div>
+    <p style="font-size:.9rem;color:var(--text);line-height:1.7;font-style:italic;" id="prompt-source"></p>
+  </div>
+  <div class="panel w" id="prompt-tips-panel" style="display:none;">
+    <div class="slabel">A STRONG ASSIGNMENT COVERS</div>
+    <ul class="prompt-tips" id="prompt-tips"></ul>
   </div>
   <div class="w">
     <div class="slabel" id="prompt-assignment-label">YOUR ASSIGNMENT</div>
@@ -702,9 +714,11 @@ const DECK = [
  opts:[{id:'A',txt:'🟢 GREEN — normal work'},{id:'B',txt:'🟡 YELLOW — slow down, add safeguards'},{id:'C',txt:'🔴 RED — stop or reframe'}],
  notes:{say:'Third and last bonus slot — only if the room still has energy for it.',ask:'Green, Yellow, or Red?',land:'Wrap this up and move into the missions.'}},
 
-{id:'mission1-intro',type:'slide',min:1,kicker:'YOUR FIRST AI MISSION',title:'A City Manager Just Handed You a Problem',priority:'runiftime',
- bullets:['Scan the QR if you haven\'t already','You are Communications for a public agency','Claude will actually do the work — you give it the job, and everyone votes on what happens next'],
- notes:{say:'We have talked about giving AI the right role. Now you are actually going to do it. This time I am not writing the prompt for you.',ask:'Grab your phone. You are now the communications team.',land:'The challenge is not to write clever AI language. The challenge is to give AI a good job.'}},
+{id:'mission1-intro',type:'slide',min:2,kicker:'YOUR FIRST AI MISSION',title:'You\'re the Communications Team',priority:'must',
+ bullets:['A department head needs a press release about a new grant, and wants it fast. Plain sentences are fine for Step 3 — nobody is grading prompt-engineering vocabulary.'],
+ columns:[{h:'STEP 1 · VOTE',d:'Read the situation and pick how your team should handle the request.'},{h:'STEP 2 · SEE WHAT HAPPENED',d:'Tap Reveal Consequences to see how your choice played out.'},{h:'STEP 3 · GIVE AI THE JOB',d:'Tap Give AI The Job and write the instructions you\'d hand AI. You\'ll get instant feedback.'}],
+ callout:'You\'re scored on Task · Context · Boundaries · Verification — not on clever wording.',
+ notes:{say:'We have talked about giving AI the right role. Now you are actually going to do it, and this time I am not writing the prompt for you. Three steps on your phone: vote, see what happened, then write the assignment you would give AI.',ask:'Grab your phone. You are now the communications team.',reveal:'Point at the four scoring words. Tell them plain sentences are fine; nobody is grading their prompt-engineering vocabulary.',land:'The challenge is not to write clever AI language. The challenge is to give AI a good job.'}},
 
 {id:'m-press',type:'scenario',min:6,label:'Mission 1 · The Press Release',priority:'must',
  setup:'A department head asks your communications team to let AI write a press release about a new city infrastructure grant. They send over a one-paragraph summary and tell you to make it a full release. The department head says they will approve it with a quick read.',
@@ -714,8 +728,9 @@ const DECK = [
   {id:'B',txt:'Use AI to draft the release but verify every specific fact against primary sources before sending',out:'The best outcome. AI produced a clean structure and professional language in minutes. A staff member verified the grant amount, confirmed the quote, and checked the program name. The release went out accurate and on time.',rsk:15,gInno:1},
   {id:'C',txt:'Decline to use AI for press releases because accuracy cannot be guaranteed',out:'SAFE, BUT HIGH-FRICTION. The release remained accurate, but the team gave up an opportunity to accelerate drafting while retaining human fact-checking. The risk could have been managed without removing AI entirely.',rsk:44,gInno:-5},
  ],
- pTask:'Give AI the job of drafting a government press release that is structured professionally and flags where facts need verification.',
- pSample:'Draft a press release for a city government announcing a new infrastructure grant. Use the following information as your source. Use standard press release format: headline, dateline, opening paragraph with the key facts, one or two supporting paragraphs with context, a quote placeholder clearly marked as needing official approval, and a boilerplate closing. Flag any specific numbers or claims that should be verified against official sources before distribution.',
+ pTask:'Write the assignment you\'d give AI to turn the department head\'s summary (below) into a full press release. Plain sentences are fine — aim for 3 to 5.',
+ pSource:'The City has been awarded a $3.2 million federal infrastructure grant to replace 1.8 miles of aging water line along Oak Street and 9th Avenue. Construction is expected to begin next spring and last about 14 months. Residents may see lane closures during work hours. The Mayor would like to include a quote.',
+ pSample:'Draft a press release for a city government announcing a new infrastructure grant, using only the department head\'s summary below as your source. Do not add any numbers, names, or quotes that are not in it. Use standard press release format: headline, dateline, opening paragraph with the key facts, one or two supporting paragraphs with context, a quote placeholder clearly marked as needing official approval, and a boilerplate closing. Flag any specific numbers or claims that should be verified against official sources before distribution.',
  pFrame:{A:'You picked the fast path — get it out with a quick read and move on. That instinct is exactly how the rounded grant amount and invented quote slipped through. Now build an assignment that keeps AI\'s speed without that risk.',
   B:'You picked the safer approach — verify before it goes out. Knowing that\'s the right call and getting AI to actually execute it are two different skills. Let\'s see if you can build the assignment that produces it.',
   C:'You played it safe by skipping AI entirely — understandable, but it cost you speed for a risk that could have been managed differently. Let\'s see if you can build an assignment that gets you the accuracy you wanted without giving up the tool.'},
@@ -1050,6 +1065,7 @@ function loadSegment(idx){
   }
   $('cons-wrap').style.display='none';
   $('voted-confirm').style.display='none';
+  $('voted-hint').textContent = seg.type==='scenario' ? 'Live results are on the main screen. Next: tap Reveal Consequences below.' : 'Look at the main screen for live results.';
   // action buttons vary by type
   const hasConsequence = seg.type==='scenario';
   $('btn-reveal').style.display = hasConsequence?'inline-flex':'none';
@@ -1099,6 +1115,12 @@ function revealCons(){
 /* ══════════════════════════════════════════════════════════════
    PROMPT / EVAL
    ══════════════════════════════════════════════════════════════ */
+const DEFAULT_TIPS=[
+  ['Task','Say exactly what AI should produce.'],
+  ['Context','Give it the facts to use — and tell it to use only those.'],
+  ['Boundaries','Say what it must not do, like invent numbers, names, or quotes.'],
+  ['Verification','Ask it to flag anything a human needs to confirm before it goes out.'],
+];
 function loadPrompt(){
   const seg=DECK[S.idx];
   $('prompt-sc-lbl').textContent=seg.label||'';
@@ -1106,6 +1128,11 @@ function loadPrompt(){
   $('prompt-mission-label').textContent=seg.missionLabel||'YOUR MISSION';
   $('prompt-assignment-label').textContent=seg.assignmentLabel||'YOUR ASSIGNMENT';
   $('prompt-ta').placeholder=seg.assignmentPlaceholder||'Type the assignment you\'d give AI here…';
+  if(seg.pSource){ $('prompt-source-panel').style.display='block'; $('prompt-source').textContent=seg.pSource; }
+  else{ $('prompt-source-panel').style.display='none'; }
+  const tips = seg.pTips || (seg.type==='scenario' ? DEFAULT_TIPS : null);
+  if(tips){ $('prompt-tips-panel').style.display='block'; $('prompt-tips').innerHTML=tips.map(([h,d])=>`<li><b>${esc(h)}</b><span>${esc(d)}</span></li>`).join(''); }
+  else{ $('prompt-tips-panel').style.display='none'; }
   $('btn-submit').textContent=seg.submitLabel||'Assign It';
   const frame = seg.pFrame && S.sel ? seg.pFrame[S.sel] : null;
   if(frame){ $('prompt-frame-panel').style.display='block'; $('prompt-frame-text').textContent=frame; }
