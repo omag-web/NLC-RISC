@@ -415,10 +415,10 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 
   <div class="panel">
     <div class="between" style="margin-bottom:.7rem;">
-      <div class="slabel" style="margin:0;border:none;padding:0;">RUN OF SHOW · CLICK TO JUMP</div>
+      <div class="slabel" style="margin:0;border:none;padding:0;">RUN OF SHOW · CLICK TO JUMP · ← → OR CLICKER</div>
       <div style="display:flex;gap:.5rem;">
-        <button class="btn btn-g btn-sm" id="btn-fac-prev">← Prev</button>
-        <button class="btn btn-g btn-sm" id="btn-fac-next">Next →</button>
+        <button class="btn btn-g btn-sm" id="btn-fac-prev" title="Left arrow / Page Up / clicker back">← Prev</button>
+        <button class="btn btn-g btn-sm" id="btn-fac-next" title="Right arrow / Page Down / Space / clicker forward">Next →</button>
       </div>
     </div>
     <div class="ros-list" id="ros-list"></div>
@@ -1346,6 +1346,34 @@ document.addEventListener('DOMContentLoaded',()=>{
   const urlParams=new URLSearchParams(window.location.search);
   if(urlParams.get('projector')==='true'){ showProjector(); }
   else{ onSegmentChanged(); }
+
+  // ── Keyboard / presentation-clicker navigation ──
+  // Works on the facilitator console and on the projector tab (whichever window has focus).
+  // Most clickers send PageDown/PageUp; some send arrow keys. Space also advances.
+  const NAV_NEXT=['ArrowRight','PageDown',' ','Spacebar'];
+  const NAV_PREV=['ArrowLeft','PageUp'];
+  let _lastNav=0;
+  function stepDeck(dir){
+    const target=Math.max(0,Math.min(DECK.length-1,S.idx+dir));
+    if(target===S.idx) return;
+    if(IS_PROJECTOR){ S.idx=target; S.sel=null; save(); broadcastSegment(target); renderProjector(); } // quiet: no toast on the big screen
+    else{ jumpTo(target); }
+  }
+  document.addEventListener('keydown',e=>{
+    const facActive=$('facilitator') && $('facilitator').classList.contains('active');
+    if(!(IS_PROJECTOR || (IS_FACILITATOR && facActive))) return;
+    const el=document.activeElement, tag=el && el.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT' || (el && el.isContentEditable)) return; // typing — leave keys alone
+    if(e.altKey || e.ctrlKey || e.metaKey) return;
+    const dir = NAV_NEXT.includes(e.key) ? 1 : NAV_PREV.includes(e.key) ? -1 : 0;
+    if(!dir) return;
+    e.preventDefault(); // stop page scroll and Space "clicking" a focused button
+    if(e.repeat) return; // holding a key shouldn't fly through the deck
+    const now=Date.now(); if(now-_lastNav<300) return; // some clickers double-fire
+    _lastNav=now;
+    if(el && el.blur && tag==='BUTTON') el.blur();
+    stepDeck(dir);
+  });
 
   const SECRET='mission'; let typed='';
   document.addEventListener('keydown',e=>{
