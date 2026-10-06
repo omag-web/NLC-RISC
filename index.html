@@ -151,6 +151,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .proj-vote.compact .proj-bar-wrap{margin-bottom:.8rem;}
 .proj-vote.compact .proj-track{height:20px;}
 .proj-vote.compact .proj-input-badge{margin-bottom:.8rem;}
+.slide-source{font-family:var(--mono);font-size:clamp(.65rem,1vw,.85rem);color:var(--textm);letter-spacing:.06em;margin-top:1.4rem;}
 .proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
 .proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
 .proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
@@ -533,7 +534,8 @@ const DECK = [
 
 {id:'adoption-stat',type:'slide',min:2,kicker:'WHY THIS MATTERS NOW',title:'Interest Is Moving Faster Than Governance',priority:'must',
  bullets:['Employees are already experimenting with AI tools on their own, whether or not there\'s a policy for it.'],
- columns:[{h:'96%',d:'of mayors are interested in using AI'},{h:'9%',d:'of local governments have a formal internal AI policy'},{h:'38%',d:'say their org isn\'t prepared to use AI safely'}],
+ columns:[{h:'96%',d:'of mayors are interested in using AI'},{h:'9%',d:'of local governments have a formal internal AI policy'},{h:'38%',d:'of local government tech leaders say their org isn\'t prepared to use AI safely'}],
+ source:'Sources: Johns Hopkins / Bloomberg Center for Government Excellence (2023) · ICMA · Public Technology Institute (2024), via NLC',
  notes:{say:'This is why this conversation matters. Interest in AI is extremely high, but organizational readiness is not keeping pace. And while policies are still being discussed, employees are already experimenting with these tools.',ask:'Think about your own organization for a second. Do you know exactly which AI tools people are using today?',land:'The gap between adoption and governance is where most of the risk, confusion, and opportunity lives.'}},
 
 {id:'wrong-question',type:'slide',min:1,kicker:'REFRAME',title:'"Should We Allow AI?" Is the Wrong Question',priority:'runiftime',
@@ -1231,6 +1233,7 @@ function renderProjector(){
       html+=`<div class="slide-images">${seg.images.map(src=>`<div class="img-row"><img src="${esc(src)}" alt="Model comparison"/></div>`).join('')}</div>`;
     }
     if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
+    if(seg.source){ html+=`<div class="slide-source">${esc(seg.source)}</div>`; }
     if(seg.presenter || seg.presenterTitle || seg.showQR){
       const contact=[seg.presenterPhone,seg.presenterEmail].filter(Boolean).join('  ·  ');
       html+=`<div class="proj-wait-row">
