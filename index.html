@@ -190,6 +190,24 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .prompt-tips li{display:flex;flex-direction:column;gap:.1rem;padding-left:.85rem;border-left:2px solid var(--cyan-dim);}
 .prompt-tips b{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);font-weight:400;}
 .prompt-tips span{font-size:.86rem;color:var(--text2);line-height:1.5;}
+.pc-legend{display:flex;gap:2rem;flex-wrap:wrap;font-family:var(--mono);font-size:clamp(.75rem,1.2vw,1rem);color:var(--text2);letter-spacing:.06em;margin-bottom:1.2rem;}
+.pc-legend b{color:var(--text);}
+.pc-sw{display:inline-block;width:1.4em;height:.7em;border-radius:3px;margin-right:.5em;vertical-align:middle;}
+.pc-sw.then,.pc-fill.then{background:rgba(139,184,212,.35);}
+.pc-sw.now,.pc-fill.now{background:linear-gradient(90deg,#0097a7,#00e5ff);box-shadow:0 0 14px rgba(0,229,255,.35);}
+.pc-rows{display:flex;flex-direction:column;gap:1.6rem;width:100%;}
+.pc-row{display:grid;grid-template-columns:minmax(220px,22%) 1fr 150px;gap:1.5rem;align-items:center;}
+.pc-lbl{font-family:var(--body);font-weight:600;font-size:clamp(1rem,1.8vw,1.45rem);color:var(--text);}
+.pc-bars{display:flex;flex-direction:column;gap:.45rem;}
+.pc-line{display:flex;align-items:center;gap:.9rem;}
+.pc-track{flex:1;height:22px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.pc-fill{height:100%;width:0;border-radius:11px;transition:width .9s cubic-bezier(.25,1,.5,1);}
+.pc-pct{width:3.6em;text-align:right;font-family:var(--disp);font-weight:700;font-size:clamp(.9rem,1.5vw,1.2rem);}
+.pc-pct.then{color:var(--text2);opacity:.75;}
+.pc-pct.now{color:var(--cyan);}
+.pc-delta{font-family:var(--disp);font-weight:900;font-size:clamp(1rem,1.8vw,1.5rem);color:var(--textm);text-align:right;}
+.pc-delta.up{color:var(--green);}
+.pc-delta.down{color:var(--amber);}
 .proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
 .proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
 .proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
@@ -795,7 +813,11 @@ const DECK = [
 
 {id:'pulse-close',type:'poll',min:1,label:'Final Pulse Check',setup:'Same four options as when we started —',q:'How are you feeling about AI now?',priority:'must',
  opts:[{id:'A',txt:'😬 Mostly concerned'},{id:'B',txt:'🤔 Interested, but cautious'},{id:'C',txt:'👍 Already using it'},{id:'D',txt:'🚀 Give me all the AI'}],
- notes:{say:'We started here, so I want to ask exactly the same question again.',ask:'How are you feeling about AI now?',reveal:'Compare the opening and closing distributions. Do not imply that moving toward enthusiasm is automatically better.',land:'The goal was never to make everyone more excited about AI. More informed caution is still progress.'}},
+ notes:{say:'We started here, so I want to ask exactly the same question again.',ask:'How are you feeling about AI now?',reveal:'Let the votes come in. Do not compare yet; the next slide puts the start and the end side by side.',land:'Once most votes are in, click forward to show how the room changed.'}},
+
+{id:'pulse-compare',type:'pulse-compare',min:1,label:'How the Room Changed',title:'How the Room Changed',kicker:'OPENING vs. FINAL PULSE CHECK',from:'pulse-open',to:'pulse-close',priority:'must',
+ setup:'Side by side: the Opening Pulse Check vs. the Final Pulse Check, with the shift for each answer.',
+ notes:{say:'Here is where this room started an hour ago, and here is where it ended.',ask:'What do you notice? Did anyone in here move?',reveal:'Point to the biggest shift. Do not imply that more enthusiasm is the goal; movement toward Interested, but cautious is a win too.',land:'The goal was never to make everyone more excited about AI. More informed caution is still progress.'}},
 
 {id:'pulse-close-2',type:'poll',min:1,label:'Final Pulse Check — Readiness',setup:'One last question —',q:'How prepared do you feel to make AI decisions in your organization?',priority:'must',
  opts:[{id:'A',txt:'😬 Not prepared'},{id:'B',txt:'🤔 I know what questions to ask'},{id:'C',txt:'👍 I could help establish guardrails'},{id:'D',txt:'🚀 I\'m ready to lead the conversation'}],
@@ -916,6 +938,11 @@ async function connectAbly(key){
       votes[segId][opt]=(votes[segId][opt]||0)+1;
       applyGaugeDelta(gauge);
       refreshAllLiveUI();
+    });
+    voteChannel.subscribe('pulseSync',msg=>{
+      const d=msg.data||{}; let changed=false;
+      Object.keys(d).forEach(id=>{ votes[id]=votes[id]||{}; Object.entries(d[id]||{}).forEach(([k,n])=>{ if((votes[id][k]||0)<n){ votes[id][k]=n; changed=true; } }); });
+      if(changed) refreshAllLiveUI();
     });
     voteChannel.subscribe('snapshot',msg=>{ const snap=msg.data; if(snap){ votes=snap.votes||votes; gauges=snap.gauges||gauges; refreshAllLiveUI(); } });
     voteChannel.subscribe('prompt',msg=>{
@@ -1044,7 +1071,7 @@ function onSegmentChanged(){
   } else if(seg.type==='collect'){
     loadPrompt(); showScreen('prompt-screen');
   } else {
-    $('watch-note').textContent = seg.title ? ('Coming up: '+seg.title) : 'Stand by.';
+    $('watch-note').textContent = seg.type==='pulse-compare' ? 'Look up: here is how the room changed since the start.' : (seg.title ? ('Coming up: '+seg.title) : 'Stand by.');
     showScreen('watch');
   }
 }
@@ -1212,7 +1239,7 @@ async function generatePolicy(){
    ══════════════════════════════════════════════════════════════ */
 function toggleSample(){ const b=$('sample-body'),c=$('sample-chevron'); const open=b.style.display==='none'; b.style.display=open?'block':'none'; c.style.transform=open?'rotate(180deg)':'rotate(0deg)'; }
 
-function typeIcon(t){ return {slide:'slide',scenario:'scenario',traffic:'traffic',poll:'traffic',policy:'policy','policy-reveal':'special','health-reveal':'special',collect:'special','bonus-traffic':'traffic'}[t]||'slide'; }
+function typeIcon(t){ return {slide:'slide',scenario:'scenario',traffic:'traffic',poll:'traffic',policy:'policy','policy-reveal':'special','health-reveal':'special','pulse-compare':'special',collect:'special','bonus-traffic':'traffic'}[t]||'slide'; }
 function renderROS(){
   const list=$('ros-list'); list.innerHTML='';
   const priLabel={must:'MUST RUN',runiftime:'RUN IF ON TIME',optional:'OPTIONAL — CUT FIRST'};
@@ -1225,7 +1252,7 @@ function renderROS(){
     list.appendChild(div);
   });
 }
-function jumpTo(i){ S.idx=i; S.sel=null; save(); broadcastSegment(i); renderFacilitator(); toast('LIVE: '+(DECK[i].label||DECK[i].title||'')); }
+function jumpTo(i){ S.idx=i; S.sel=null; save(); broadcastSegment(i); if(DECK[i] && DECK[i].type==='pulse-compare') sharePulseVotes(); renderFacilitator(); toast('LIVE: '+(DECK[i].label||DECK[i].title||'')); }
 
 function renderFacPreview(){
   const seg=DECK[S.idx];
@@ -1329,9 +1356,46 @@ function briefHtml(reveal){
   if(!reveal) return `<div class="brief-wrap">${card}</div>`;
   return `<div class="brief-wrap rev">${card}<ol class="br-legend">${BRIEF_ERRORS.map((t,i)=>`<li><span class="n">${i+1}</span>${esc(t)}</li>`).join('')}</ol></div>`;
 }
+/* ── Opening vs. Final pulse comparison ── */
+function renderPulseCompare(body,seg){
+  const A=seg.from, B=seg.to, opts=(DECK.find(d=>d.id===B)||{}).opts||[];
+  const tA=totalVotes(A), tB=totalVotes(B);
+  if(_lastProjBarsFor!=='pulse-compare'){
+    body.style.justifyContent='flex-start';
+    body.innerHTML=`<div class="slide-kicker">${esc(seg.kicker||'')}</div>
+      <div class="slide-title slide-title-sm">${esc(seg.title||'')}</div>
+      <div class="pc-legend"><span><i class="pc-sw then"></i>Start of session · <b id="pc-tA">0</b> votes</span><span><i class="pc-sw now"></i>Now · <b id="pc-tB">0</b> votes</span></div>
+      <div class="pc-rows">${opts.map(o=>`<div class="pc-row">
+        <div class="pc-lbl">${esc(o.txt)}</div>
+        <div class="pc-bars">
+          <div class="pc-line"><div class="pc-track"><div class="pc-fill then" id="pc-a-${o.id}"></div></div><span class="pc-pct then" id="pc-ap-${o.id}">0%</span></div>
+          <div class="pc-line"><div class="pc-track"><div class="pc-fill now" id="pc-b-${o.id}"></div></div><span class="pc-pct now" id="pc-bp-${o.id}">0%</span></div>
+        </div>
+        <div class="pc-delta" id="pc-d-${o.id}">—</div>
+      </div>`).join('')}</div>
+      <div class="slide-callout" id="pc-callout"></div>`;
+    _lastProjBarsFor='pulse-compare';
+  }
+  $('pc-tA').textContent=tA; $('pc-tB').textContent=tB;
+  let best=null;
+  opts.forEach(o=>{
+    const a=pct(A,o.id), b=pct(B,o.id), d=b-a;
+    requestAnimationFrame(()=>{ const fa=$('pc-a-'+o.id), fb=$('pc-b-'+o.id); if(fa) fa.style.width=a+'%'; if(fb) fb.style.width=b+'%'; });
+    $('pc-ap-'+o.id).textContent=a+'%'; $('pc-bp-'+o.id).textContent=b+'%';
+    const de=$('pc-d-'+o.id);
+    if(!tA||!tB){ de.textContent='—'; de.className='pc-delta'; }
+    else{ de.textContent=(d>0?'▲ +':d<0?'▼ ':'')+d+(d===0?' pts':' pts'); de.className='pc-delta '+(d>0?'up':d<0?'down':''); }
+    if(tA&&tB&&(!best||Math.abs(d)>Math.abs(best.d))) best={o,d};
+  });
+  $('pc-callout').textContent = (!tA||!tB) ? 'Waiting for votes from both pulse checks…'
+    : (best && best.d!==0) ? `Biggest shift: ${best.o.txt} ${best.d>0?'+':''}${best.d} points` : 'The room landed right where it started.';
+}
+// Pulse comparison needs the opening votes; merge counts so a refreshed tab doesn't show an empty "start" column.
+function sharePulseVotes(){ if(!voteChannel) return; const seg=DECK.find(d=>d.type==='pulse-compare'); if(!seg) return;
+  try{ voteChannel.publish('pulseSync',{[seg.from]:votes[seg.from]||{},[seg.to]:votes[seg.to]||{}}); }catch(e){} }
 function renderProjector(){
   const seg=DECK[S.idx]; if(!seg) return;
-  $('proj-kicker').textContent = seg.type==='slide' ? 'AI CONTROL ROOM' : (seg.kicker||seg.label||'AI CONTROL ROOM').toUpperCase();
+  $('proj-kicker').textContent = (seg.type==='slide'||seg.type==='pulse-compare') ? 'AI CONTROL ROOM' : (seg.kicker||seg.label||'AI CONTROL ROOM').toUpperCase();
   const body=$('proj-body');
   $('proj-vote-count').style.display = seg.opts ? 'flex':'none';
   if(seg.opts) $('proj-total').textContent=totalVotes(seg.id);
@@ -1395,6 +1459,8 @@ function renderProjector(){
     body.innerHTML = policyResult
       ? `<div class="slide-title" style="font-size:clamp(1.3rem,3vw,2rem);">📜 Your Room's AI Principles</div><div style="font-family:var(--body);font-size:clamp(1rem,1.8vw,1.3rem);color:var(--text2);line-height:1.9;white-space:pre-line;">${esc(policyResult)}</div>`
       : `<div class="watch-card"><div class="disp cyan" style="font-size:1rem;letter-spacing:.1em;">WAITING FOR FACILITATOR TO GENERATE...</div></div>`;
+  } else if(seg.type==='pulse-compare'){
+    renderPulseCompare(body,seg);
   } else if(seg.type==='health-reveal'){
     if(_lastProjBarsFor!=='health-reveal'){
       body.style.justifyContent='center';
@@ -1476,7 +1542,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function stepDeck(dir){
     const target=Math.max(0,Math.min(DECK.length-1,S.idx+dir));
     if(target===S.idx) return;
-    if(IS_PROJECTOR){ S.idx=target; S.sel=null; save(); broadcastSegment(target); renderProjector(); } // quiet: no toast on the big screen
+    if(IS_PROJECTOR){ S.idx=target; S.sel=null; save(); broadcastSegment(target); if(DECK[target].type==='pulse-compare') sharePulseVotes(); renderProjector(); } // quiet: no toast on the big screen
     else{ jumpTo(target); }
   }
   document.addEventListener('keydown',e=>{
