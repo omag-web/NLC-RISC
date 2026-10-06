@@ -152,6 +152,38 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .proj-vote.compact .proj-track{height:20px;}
 .proj-vote.compact .proj-input-badge{margin-bottom:.8rem;}
 .slide-source{font-family:var(--mono);font-size:clamp(.65rem,1vw,.85rem);color:var(--textm);letter-spacing:.06em;margin-top:1.4rem;}
+.slide-title-sm{font-size:clamp(1.4rem,3.2vw,2.4rem);margin:.35rem 0 1rem;}
+.brief-wrap{display:flex;gap:2rem;align-items:flex-start;width:100%;}
+.brief{flex:1;max-width:1050px;background:#fff;color:#1f2937;border-radius:14px;padding:1.6rem 1.9rem;box-shadow:0 20px 60px rgba(0,0,0,.45);font-family:'Inter','Segoe UI',Helvetica,Arial,sans-serif;}
+.brief-wrap:not(.rev) .brief{margin:0 auto;}
+.br-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;border-bottom:2px solid #e5e7eb;padding-bottom:.9rem;margin-bottom:1.1rem;}
+.br-org{font-size:clamp(.7rem,1.05vw,.9rem);letter-spacing:.14em;text-transform:uppercase;color:#2563eb;font-weight:700;}
+.br-h{font-size:clamp(1.2rem,2.1vw,1.75rem);font-weight:800;color:#111827;margin-top:.15rem;}
+.br-conf{display:inline-flex;align-items:center;gap:.45rem;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:999px;padding:.4rem .9rem;font-size:clamp(.75rem,1.1vw,.95rem);white-space:nowrap;}
+.br-conf b{font-weight:800;}
+.br-check{display:inline-grid;place-items:center;width:1.2em;height:1.2em;border-radius:50%;background:#10b981;color:#fff;font-size:.8em;}
+.br-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin-bottom:1.1rem;}
+.br-stat{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:.8rem 1rem;}
+.br-stat .v{font-size:clamp(1.5rem,2.6vw,2.2rem);font-weight:800;color:#111827;line-height:1.1;}
+.br-stat .l{font-size:clamp(.72rem,1.05vw,.9rem);color:#6b7280;margin-top:.3rem;line-height:1.35;}
+.br-body{display:grid;grid-template-columns:1fr 1.35fr;gap:1.2rem;align-items:stretch;}
+.br-chart{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:.8rem 1rem;display:flex;flex-direction:column;}
+.br-ct{font-size:clamp(.7rem,1vw,.85rem);color:#6b7280;font-weight:600;margin-bottom:.5rem;}
+.br-bars{flex:1;display:flex;align-items:flex-end;gap:.9rem;min-height:120px;}
+.br-bar{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:.35rem;}
+.br-bar .b{width:100%;background:linear-gradient(180deg,#60a5fa,#2563eb);border-radius:6px 6px 0 0;}
+.br-bar .q{font-size:clamp(.7rem,1vw,.85rem);color:#374151;font-weight:600;}
+.br-list{list-style:none;display:flex;flex-direction:column;gap:.65rem;margin:0;padding:0;}
+.br-list li{font-size:clamp(.85rem,1.3vw,1.08rem);color:#374151;line-height:1.45;padding-left:1.1rem;position:relative;}
+.br-list li::before{content:'';position:absolute;left:0;top:.55em;width:.45rem;height:.45rem;border-radius:50%;background:#2563eb;}
+.br-foot{margin-top:1rem;padding-top:.7rem;border-top:1px solid #e5e7eb;font-size:clamp(.65rem,.95vw,.8rem);color:#9ca3af;}
+.br-err{position:relative;}
+.br-err.on{display:inline-block;white-space:nowrap;line-height:1.25;}
+.br-err.on{outline:3px solid #ef4444;outline-offset:3px;border-radius:4px;background:rgba(239,68,68,.08);}
+.br-err.on::after{content:attr(data-n);position:absolute;top:-.95em;right:-.95em;width:1.5em;height:1.5em;display:grid;place-items:center;background:#ef4444;color:#fff;border-radius:50%;font:800 clamp(.6rem,.9vw,.8rem)/1 'Inter',Arial,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:2;}
+.br-legend{list-style:none;width:clamp(240px,24vw,380px);display:flex;flex-direction:column;gap:.7rem;margin:0;padding:0;flex-shrink:0;}
+.br-legend li{display:flex;gap:.7rem;align-items:flex-start;font-family:var(--body);font-weight:600;font-size:clamp(.9rem,1.4vw,1.2rem);color:var(--text);line-height:1.35;}
+.br-legend .n{flex-shrink:0;width:1.6em;height:1.6em;display:grid;place-items:center;background:var(--red);color:#fff;border-radius:50%;font-family:var(--mono);font-size:.85em;}
 .proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
 .proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
 .proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
@@ -570,10 +602,14 @@ const DECK = [
  columns:[{h:'DATA',d:'What did you give it?'},{h:'ACCURACY',d:'Is the output true?'},{h:'DECISION',d:'What authority did you give it?'},{h:'ACCOUNTABILITY',d:'Who owns the result?'}],
  notes:{say:'Once we understand what the tools are, governance gets simpler. Most AI questions eventually come back to four things: the data we gave it, the accuracy of what came back, the authority we gave it, and who remains accountable afterward.',ask:'As we go through the next few scenarios, keep these four words in the back of your mind.',land:'Data. Accuracy. Decision. Accountability. Those are the edges.'}},
 
-{id:'confidence-accuracy',type:'slide',min:2,kicker:'A CRITICAL DISTINCTION',title:'AI Confidence ≠ AI Accuracy',priority:'runiftime',
+{id:'confidence-setup',type:'slide',min:1,kicker:'A QUICK BRIEFING',title:'I Asked AI for an Executive Summary',priority:'runiftime',brief:'setup',
+ bullets:['A polished AI-generated Public Works executive summary, shown as if it were ready to forward.'],
+ notes:{say:'I asked AI to put together a quick executive summary for a public works department. Clean layout, charts, a confidence score. Honestly, it looks better than most things I make.',ask:'Show of hands: who would forward this to their city manager as-is?',land:'Do not reveal anything yet. Let them admire it for a few seconds, then click.'}},
+
+{id:'confidence-accuracy',type:'slide',min:2,kicker:'A CRITICAL DISTINCTION',title:'AI Confidence ≠ AI Accuracy',priority:'runiftime',brief:'reveal',
  bullets:['It can be spectacularly helpful — and spectacularly wrong — with exactly the same confidence.','A polished, well-formatted answer is not the same thing as a correct one.'],
  callout:'The interface doesn\'t look nervous when it\'s guessing.',
- notes:{say:'AI has a very strange quality: it can be incredibly useful and incredibly wrong with almost exactly the same tone of voice. The answer can be polished, organized, confident, and still be wrong.',ask:'How often do we unconsciously trust something more simply because it looks professional?',land:'Presentation quality is not evidence of accuracy.'}},
+ notes:{say:'Same summary. Seven problems. A project that is 112 percent complete. A budget that does not add up. A fifth quarter. A law that does not exist, a quote nobody said, a satisfaction score from three people, and a source from next year. And it was 99.2 percent confident the whole time.',ask:'How many did you catch before I circled them? How often do we trust something more simply because it looks professional?',land:'Presentation quality is not evidence of accuracy.'}},
 
 {id:'trust-check',type:'scenario',min:3,label:'Was AI\'s Answer Trustworthy?',priority:'must',
  setup:'Here is the full policy excerpt, in front of you the whole time: Section 4 says "Employees must report incidents within five business days." Section 8, added in a later revision to the same document, says "Report within 72 hours." Both sections currently exist side by side. AI was asked: "According to this policy, how quickly must an incident be reported?" It answered: "Employees must report incidents within five business days" — citing Section 4, with no mention of Section 8.',
@@ -1214,6 +1250,45 @@ function renderSubs(){
 /* ══════════════════════════════════════════════════════════════
    PROJECTOR
    ══════════════════════════════════════════════════════════════ */
+/* ── Fake "AI executive summary" for the Confidence ≠ Accuracy bit ──
+   Every <e n=..> span is a deliberate error; reveal mode circles and numbers them. */
+const BRIEF_ERRORS=[
+  'A project can\'t be 112% complete',
+  '$2.4M budget − $2.4M spent ≠ $0.6M left',
+  'There is no Q5 (and Q4 is missing)',
+  'The "1854 Hydrant Act" doesn\'t exist',
+  'A quote nobody actually said',
+  '4.9 stars… from 3 responses',
+  'Cites a report from the future',
+];
+function briefHtml(reveal){
+  const e=(n,t)=>`<span class="br-err${reveal?' on':''}" data-n="${n}">${t}</span>`;
+  const bars=[['Q1',52],['Q2',64],['Q3',71],['Q5',88]];
+  const card=`<div class="brief">
+    <div class="br-top">
+      <div><div class="br-org">Department of Public Works</div><div class="br-h">FY2026 Executive Summary</div></div>
+      <div class="br-conf"><span class="br-check">✓</span> AI Confidence <b>99.2%</b></div>
+    </div>
+    <div class="br-stats">
+      <div class="br-stat"><div class="v">${e(1,'112%')}</div><div class="l">Lead pipe replacement complete</div></div>
+      <div class="br-stat"><div class="v">$2.4M</div><div class="l">Budgeted · $2.4M spent · ${e(2,'$0.6M left')}</div></div>
+      <div class="br-stat"><div class="v">4.9 ★</div><div class="l">Resident satisfaction ${e(6,'(3 responses)')}</div></div>
+    </div>
+    <div class="br-body">
+      <div class="br-chart"><div class="br-ct">Work orders closed (%)</div>
+        <div class="br-bars">${bars.map(([q,v])=>`<div class="br-bar"><div class="b" style="height:${v}%"></div><div class="q">${q==='Q5'?e(3,q):q}</div></div>`).join('')}</div>
+      </div>
+      <ul class="br-list">
+        <li>Main breaks fell 18% year over year, driven by proactive valve exercising.</li>
+        <li>All hydrants now comply with the ${e(4,'1854 Municipal Hydrant Act')}.</li>
+        <li>${e(5,'"Clean water is our quiet promise."')} — Public Works Director</li>
+      </ul>
+    </div>
+    <div class="br-foot">Sources: ${e(7,'City Infrastructure Report, FY2027')} · Generated in 11 seconds</div>
+  </div>`;
+  if(!reveal) return `<div class="brief-wrap">${card}</div>`;
+  return `<div class="brief-wrap rev">${card}<ol class="br-legend">${BRIEF_ERRORS.map((t,i)=>`<li><span class="n">${i+1}</span>${esc(t)}</li>`).join('')}</ol></div>`;
+}
 function renderProjector(){
   const seg=DECK[S.idx]; if(!seg) return;
   $('proj-kicker').textContent = seg.type==='slide' ? 'AI CONTROL ROOM' : (seg.kicker||seg.label||'AI CONTROL ROOM').toUpperCase();
@@ -1224,7 +1299,12 @@ function renderProjector(){
 
   if(seg.type==='slide'){
     _lastProjBarsFor=null;
-    let html=`<div class="slide-kicker">${esc(seg.kicker||'')}</div><div class="slide-title">${esc(seg.title||'')}</div>`;
+    let html=`<div class="slide-kicker">${esc(seg.kicker||'')}</div><div class="slide-title${seg.brief?' slide-title-sm':''}">${esc(seg.title||'')}</div>`;
+    if(seg.brief){
+      html+=briefHtml(seg.brief==='reveal');
+      if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
+      body.innerHTML=html; body.style.justifyContent='flex-start'; return;
+    }
     if(seg.columns){ html+=`<div class="slide-cols">${seg.columns.map(c=>`<div class="slide-col"><h3>${esc(c.h)}</h3><p>${esc(c.d)}</p></div>`).join('')}</div>`; }
     if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
     if(seg.imageRows){
