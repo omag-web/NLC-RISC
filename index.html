@@ -22,6 +22,19 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:16px;}
+/* ── Phone readability: larger base size and no tiny labels (audience devices only) ── */
+@media (max-width:700px){
+  :root{--textm:#7d9db4;}
+  html{font-size:18px;}
+  .opt-btn,#sc-setup,#sc-q,#prompt-task,#prompt-source,#prompt-frame-text,#cons-out,#eval-feedback,#eval-improve,#watch-note,.prompt-tips span{font-size:1rem !important;line-height:1.6 !important;}
+  #sc-q{font-size:1.05rem !important;}
+  .ta{font-size:1rem;}
+  .btn{font-size:.85rem !important;}
+  .land-eye{font-size:.75rem !important;}
+  .slabel,.badge,.ticker,.conn-pill,.nav-back,.opt-letter,.human-banner,.prompt-tips b,.pg-label,
+  [style*="font-size:.58rem"],[style*="font-size:.6rem"],[style*="font-size:.62rem"],[style*="font-size:.63rem"],
+  [style*="font-size:.65rem"],[style*="font-size:.67rem"],[style*="font-size:.7rem"],[style*="font-size:.72rem"]{font-size:.75rem !important;}
+}
 body{background-color:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;
   background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);background-size:44px 44px;}
 body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;background:linear-gradient(transparent,var(--cyan),transparent);opacity:.12;animation:scan 9s linear infinite;pointer-events:none;z-index:9999;}
