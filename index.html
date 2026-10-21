@@ -584,7 +584,9 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
       <button class="btn btn-o btn-sm" id="btn-dl-results">⬇ Results (CSV)</button>
       <button class="btn btn-o btn-sm" id="btn-dl-assign">⬇ Assignments + AI Scores (CSV)</button>
       <button class="btn btn-g btn-sm" id="btn-dl-json">⬇ Full Data (JSON)</button>
+      <button class="btn btn-p btn-sm" id="btn-email-report" style="margin-left:auto;">✉ Email Me the Data</button>
     </div>
+    <div class="mono" style="font-size:.6rem;color:var(--cyan);margin-top:.6rem;line-height:1.6;" id="email-status"></div>
     <p class="mono muted" style="font-size:.6rem;line-height:1.6;margin-top:.8rem;">Saved automatically in this browser as the session runs, including if you refresh. Participants are anonymous. Download after the session; Reset Entire Session clears it.</p>
   </div>
 </div>
@@ -1509,22 +1511,24 @@ function renderDataPanel(){
     .map(([l,v])=>`<div class="data-stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
   $('data-since').textContent='Recording since '+fmtLocal(SESSION_DATA.started);
 }
-function downloadResultsCSV(){
+function buildResultsCSV(){
   const rows=[['Order','Item','Type','Question','Option','Answer','Votes','Percent','Total votes on item']];
   DECK.forEach((seg,i)=>{ if(!seg.opts) return; const t=totalVotes(seg.id);
     seg.opts.forEach(o=>rows.push([i+1,seg.label||seg.title||seg.id,seg.type,itemQuestion(seg),o.id,o.txt,(votes[seg.id]&&votes[seg.id][o.id])||0,t?pct(seg.id,o.id)+'%':'',t])); });
   rows.push([]); rows.push(['','AI balance gauges (simulation)','','','','','Value (0-100)']);
   [['inno','Innovation'],['priv','Data Stewardship'],['acc','Reliability'],['human','Human Control']].forEach(([k,n])=>rows.push(['',n,'','','','',gaugeVal(k)]));
   if(policyResult){ rows.push([]); rows.push(['',"Room's AI Principles (AI-generated)"]); policyResult.split('\n').filter(Boolean).forEach(l=>rows.push(['',l])); }
-  downloadFile(`ai-control-room_results_${stamp()}.csv`,csv(rows),'text/csv;charset=utf-8');
+  return csv(rows);
 }
-function downloadAssignmentsCSV(){
+function downloadResultsCSV(){ downloadFile(`ai-control-room_results_${stamp()}.csv`,buildResultsCSV(),'text/csv;charset=utf-8'); }
+function buildAssignmentsCSV(){
   const rows=[['Time','Item','Assignment written by participant','AI score','Grade','Task','Context','Boundaries','Verification','Participant (anonymous)']];
   SESSION_DATA.prompts.slice().sort((a,b)=>a.ts<b.ts?-1:1).forEach(p=>{ const dim=n=>{ const x=(p.dims||[]).find(d=>d.name===n); return x?x.score:''; };
     rows.push([fmtLocal(p.ts),p.sl,p.txt,typeof p.score==='number'?p.score:'',p.grade||'',dim('Task'),dim('Context'),dim('Boundaries'),dim('Verification'),p.dev||'']); });
-  downloadFile(`ai-control-room_assignments_${stamp()}.csv`,csv(rows),'text/csv;charset=utf-8');
+  return csv(rows);
 }
-function downloadFullJSON(){
+function downloadAssignmentsCSV(){ downloadFile(`ai-control-room_assignments_${stamp()}.csv`,buildAssignmentsCSV(),'text/csv;charset=utf-8'); }
+function buildFullJSON(){
   const out={
     session:'NLC-RISC 2026 · AI Control Room — Leveraging AI Without Scaring Everyone',
     exported:new Date().toISOString(), recordingStarted:SESSION_DATA.started, summary:dataStats(),
@@ -1536,7 +1540,30 @@ function downloadFullJSON(){
     slideTimeline:SESSION_DATA.events.filter(e=>e.type==='slide').map(e=>({time:e.t,item:(DECK.find(d=>d.id===e.seg)||{}).label||(DECK.find(d=>d.id===e.seg)||{}).title||e.seg})),
     voteLog:SESSION_DATA.events.filter(e=>e.type==='vote')
   };
-  downloadFile(`ai-control-room_full-data_${stamp()}.json`,JSON.stringify(out,null,2),'application/json');
+  return JSON.stringify(out,null,2);
+}
+function downloadFullJSON(){ downloadFile(`ai-control-room_full-data_${stamp()}.json`,buildFullJSON(),'application/json'); }
+
+/* ── Email the session data (via /api/email-report) ── */
+async function emailReport(){
+  const btn=$('btn-email-report'); const label=btn.textContent;
+  btn.disabled=true; btn.textContent='Sending…';
+  try{
+    const st=dataStats(), s=stamp();
+    const r=await fetch('/api/email-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      code:FAC_CODE||'',
+      summary:{...st, recordingStarted:SESSION_DATA.started, principles:policyResult||''},
+      files:[
+        {name:`ai-control-room_results_${s}.csv`,content:buildResultsCSV()},
+        {name:`ai-control-room_assignments_${s}.csv`,content:buildAssignmentsCSV()},
+        {name:`ai-control-room_full-data_${s}.json`,content:buildFullJSON()}
+      ]})});
+    const d=await r.json().catch(()=>({}));
+    if(r.ok){ toast('EMAILED TO '+(d.to||'YOU'),4000); $('email-status').textContent='Last emailed '+fmtLocal(new Date().toISOString())+' to '+(d.to||'you')+'.'; }
+    else if(r.status===501){ toast('EMAIL NOT SET UP YET',4000); $('email-status').textContent='Email isn\'t set up yet: add RESEND_API_KEY and REPORT_EMAIL in Vercel (see README). Use the download buttons for now.'; }
+    else { toast('EMAIL FAILED — DOWNLOAD INSTEAD',4000); $('email-status').textContent='Email failed: '+(d.error||('HTTP '+r.status))+'. Use the download buttons as a backup.'; }
+  }catch(e){ toast('EMAIL FAILED — DOWNLOAD INSTEAD',4000); $('email-status').textContent='Email failed (no connection). Use the download buttons as a backup.'; }
+  btn.disabled=false; btn.textContent=label;
 }
 
 function renderProjector(){
@@ -1676,6 +1703,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('btn-dl-results').addEventListener('click',downloadResultsCSV);
   $('btn-dl-assign').addEventListener('click',downloadAssignmentsCSV);
   $('btn-dl-json').addEventListener('click',downloadFullJSON);
+  $('btn-email-report').addEventListener('click',emailReport);
   $('btn-refresh').addEventListener('click',()=>{ renderSubs(); toast('REFRESHED'); });
   $('btn-generate-policy').addEventListener('click',generatePolicy);
   $('btn-bonus-launch').addEventListener('click',launchBonusContent);

@@ -13,6 +13,10 @@
       "destination": "/api/ably-token.js"
     },
     {
+      "source": "/api/email-report",
+      "destination": "/api/email-report.js"
+    },
+    {
       "source": "/handout",
       "destination": "/handout.html"
     }

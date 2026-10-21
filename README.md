@@ -27,6 +27,7 @@ Keep the projector tab open from the start. The "How the Room Changed" slide com
   - **Full Data (JSON):** everything above, plus a slide timeline (when each item started) and the time-stamped vote log.
 - Participants are anonymous: each phone gets a random ID, and no names or emails are collected.
 - Data lives only in the console laptop's browser. **Download it after the session**, before clearing the browser or resetting.
+- **✉ Email Me the Data** sends a summary plus all three files as attachments to `REPORT_EMAIL` (needs the email setup below). Downloads still work as a backup.
 
 ## Timing and cut plan
 
@@ -103,6 +104,9 @@ The three "Give AI The Job" writing exercises usually run long, so watch the clo
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | AI scoring for "Give AI The Job" and the Room's AI Principles generator (`api/evaluate.js`, Claude Haiku 4.5). |
 | `ABLY_API_KEY` | Yes | Realtime voting and slide sync. |
+| `RESEND_API_KEY` | For email | API key from resend.com (free tier) for the **Email Me the Data** button. |
+| `REPORT_EMAIL` | For email | Where reports go, e.g. `mburleson@omag.org`. Recipients come only from here. |
+| `REPORT_FROM` | Optional | Sender address on your own verified domain. Without it, Resend's test sender is used, which can only deliver to the address you signed up to Resend with. |
 | `FACILITATOR_CODE` | Optional | Turns on **locked-down mode** (see below). Leave unset for the original behavior. |
 
 ### Locked-down mode (`FACILITATOR_CODE`)
@@ -128,4 +132,5 @@ With it set:
 - `api/evaluate.js` — Anthropic proxy. **Must stay JavaScript**; on Aug 28 it was accidentally overwritten with a copy of `index.html`, which broke AI scoring until Oct 21.
 - `api/config.js` — runtime config (Ably key, or token mode flag).
 - `api/ably-token.js` — restricted Ably tokens for locked-down mode.
+- `api/email-report.js` — emails the session data via Resend.
 - `images/` — QR codes and model-menu screenshots (updated Oct 21 to Fable 5.1 / Opus 5.5 / Sonnet 5.5 / Haiku 4.5 and GPT-6 Instant / High / Pro).
