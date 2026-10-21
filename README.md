@@ -18,6 +18,16 @@ Advance with **→ / Page Down / Space / clicker**; go back with **← / Page Up
 
 Keep the projector tab open from the start. The "How the Room Changed" slide compares the opening and final pulse checks, which are held in browser memory.
 
+## Resetting and session data
+
+- **⟲ Reset Entire Session** (console, top button row) clears every vote, the AI balance gauges, all assignments and scores, bonus dilemmas, the generated principles and the saved session data on every device, then returns everyone to the title slide. Use it after testing and right before the talk.
+- **Session Data** panel (bottom of the console) records the session on your laptop as it runs, and survives a refresh. It shows participants, votes cast, assignments and the average AI score.
+  - **Results (CSV):** every vote item with counts and percentages, plus the gauges and the room's AI principles.
+  - **Assignments + AI Scores (CSV):** every "Give AI The Job" submission with its score, grade and the four dimension scores.
+  - **Full Data (JSON):** everything above, plus a slide timeline (when each item started) and the time-stamped vote log.
+- Participants are anonymous: each phone gets a random ID, and no names or emails are collected.
+- Data lives only in the console laptop's browser. **Download it after the session**, before clearing the browser or resetting.
+
 ## Timing and cut plan
 
 | Tier | Minutes |
@@ -109,7 +119,8 @@ With it set:
 - [ ] On the Policy reveal, click **Generate Room's AI Principles** once with test votes, then reset votes.
 - [ ] Scan both QR codes (title slide → app, Thank You slide → handout).
 - [ ] Test your clicker on the live site.
-- [ ] Reset votes on any item you tested.
+- [ ] Click **Reset Entire Session** after testing, then confirm Session Data shows zeros.
+- [ ] After the talk: download all three Session Data files.
 
 ## Files
 - `index.html` — the whole app: audience, facilitator console, projector.

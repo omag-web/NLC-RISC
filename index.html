@@ -221,6 +221,11 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 .pc-delta{font-family:var(--disp);font-weight:900;font-size:clamp(1rem,1.8vw,1.5rem);color:var(--textm);text-align:right;}
 .pc-delta.up{color:var(--green);}
 .pc-delta.down{color:var(--amber);}
+.data-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;}
+.data-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:.8rem .9rem;}
+.data-stat .v{font-family:var(--disp);font-size:1.6rem;font-weight:900;color:var(--cyan);line-height:1.1;}
+.data-stat .l{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--textm);margin-top:.3rem;}
+@media (max-width:620px){.data-stats{grid-template-columns:1fr 1fr;}}
 .proj-wait-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2.5rem;margin-top:auto;padding-top:1.5rem;flex-wrap:wrap;width:100%;}
 .proj-wait-qr{padding:14px;background:#fff;border-radius:14px;box-shadow:0 0 40px rgba(0,229,255,0.3);flex-shrink:0;}
 .proj-wait-qr img{width:220px;height:220px;display:block;border-radius:6px;}
@@ -510,6 +515,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <a class="btn btn-o" id="btn-projector" href="?projector=true" target="_blank" rel="noopener" style="text-decoration:none;">Open Projector View</a>
     <button class="btn btn-g" id="btn-fac-home">⌂ Main</button>
     <button class="btn btn-d" id="btn-fac-reset">⚠ Reset This Item's Votes</button>
+    <button class="btn btn-d" id="btn-fac-reset-all" style="margin-left:auto;">⟲ Reset Entire Session</button>
   </div>
 
   <div class="panel">
@@ -566,6 +572,20 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
       <button class="btn btn-g btn-sm" id="btn-refresh">↻ Refresh</button>
     </div>
     <div class="subs" id="fac-subs"></div>
+  </div>
+
+  <div class="panel" id="fac-data-panel">
+    <div class="between" style="margin-bottom:.8rem;">
+      <div class="slabel" style="margin:0;border:none;padding:0;">SESSION DATA</div>
+      <span class="mono muted" style="font-size:.6rem;" id="data-since"></span>
+    </div>
+    <div class="data-stats" id="data-stats"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem;">
+      <button class="btn btn-o btn-sm" id="btn-dl-results">⬇ Results (CSV)</button>
+      <button class="btn btn-o btn-sm" id="btn-dl-assign">⬇ Assignments + AI Scores (CSV)</button>
+      <button class="btn btn-g btn-sm" id="btn-dl-json">⬇ Full Data (JSON)</button>
+    </div>
+    <p class="mono muted" style="font-size:.6rem;line-height:1.6;margin-top:.8rem;">Saved automatically in this browser as the session runs, including if you refresh. Participants are anonymous. Download after the session; Reset Entire Session clears it.</p>
   </div>
 </div>
 
@@ -870,6 +890,31 @@ const save=()=>localStorage.setItem(SK,JSON.stringify(S));
 let votes={}; // votes[segId] = {A:n,B:n,...}
 DECK.forEach(d=>{ if(d.opts) votes[d.id]={}; });
 let gauges={inno:0,priv:0,acc:0,human:0,cnt:{inno:0,priv:0,acc:0,human:0}};
+
+/* ── Anonymous participant id (one per phone, stored on the phone) ── */
+const DEVICE_ID=(()=>{ const mk=()=>'p'+Math.random().toString(36).slice(2,9);
+  try{ let d=localStorage.getItem('aicr-dev'); if(!d){ d=mk(); localStorage.setItem('aicr-dev',d); } return d; }catch(e){ return mk(); } })();
+
+/* ── Session data: recorded on the facilitator's laptop as the session runs ── */
+const DATA_KEY='aicr-session-data';
+function newSessionData(){ return {started:new Date().toISOString(),events:[],prompts:[],votes:{},gauges:null,policy:null}; }
+let SESSION_DATA=(()=>{ try{ const d=JSON.parse(localStorage.getItem(DATA_KEY)||'null'); if(d&&Array.isArray(d.events)) return d; }catch(e){} return newSessionData(); })();
+let _dataSaveT=null;
+function recordData(fn){
+  if(!IS_FACILITATOR) return;
+  fn(SESSION_DATA); SESSION_DATA.votes=votes; SESSION_DATA.gauges=gauges; SESSION_DATA.policy=policyResult;
+  clearTimeout(_dataSaveT);
+  _dataSaveT=setTimeout(()=>{ try{ localStorage.setItem(DATA_KEY,JSON.stringify(SESSION_DATA)); }catch(e){} if(typeof renderDataPanel==='function') renderDataPanel(); },300);
+}
+// When the console unlocks (or is refreshed mid-session), bring back anything already saved on this laptop.
+function restoreSessionData(){
+  const d=SESSION_DATA;
+  Object.entries(d.votes||{}).forEach(([id,o])=>{ votes[id]=votes[id]||{}; Object.entries(o||{}).forEach(([k,n])=>{ if((votes[id][k]||0)<n) votes[id][k]=n; }); });
+  if(d.gauges && !Object.values(gauges.cnt).some(Boolean)) gauges=d.gauges;
+  if(!policyResult && d.policy) policyResult=d.policy;
+  (d.prompts||[]).forEach(p=>{ if(!S.prompts.some(x=>x.ts===p.ts&&x.txt===p.txt)) S.prompts.push({sid:p.sid,sl:p.sl,txt:p.txt,ts:p.ts}); });
+  recordData(()=>{});
+}
 let policyResult=null;
 
 function totalVotes(id){ const v=votes[id]||{}; return Object.values(v).reduce((a,b)=>a+b,0); }
@@ -944,7 +989,8 @@ async function connectAbly(key){
     voteChannel.subscribe('hello',onHello);    // late joiners ask "where are we?" here
     stateChannel.subscribe('segment',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number' && idx!==S.idx){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
     stateChannel.subscribe('current',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number'){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
-    stateChannel.subscribe('policyResult',msg=>{ policyResult=msg.data?.text||null; if($('projector-screen').classList.contains('active')) renderProjector(); if($('facilitator').classList.contains('active')) renderFacPreview(); });
+    stateChannel.subscribe('resetAll',()=>{ resetEverythingLocal(); onStateSynced(); });
+    stateChannel.subscribe('policyResult',msg=>{ policyResult=msg.data?.text||null; recordData(()=>{}); if($('projector-screen').classList.contains('active')) renderProjector(); if($('facilitator').classList.contains('active')) renderFacPreview(); });
     stateChannel.subscribe('bonusContent',msg=>{
       const {segId,text}=msg.data||{}; if(!segId) return;
       bonusContent[segId]=text; _lastProjBarsFor=null;
@@ -954,10 +1000,11 @@ async function connectAbly(key){
     });
 
     voteChannel.subscribe('vote',msg=>{
-      const {segId,opt,gauge}=msg.data||{};
+      const {segId,opt,gauge,dev}=msg.data||{};
       if(!segId||!opt||!votes[segId]) return;
       votes[segId][opt]=(votes[segId][opt]||0)+1;
       applyGaugeDelta(gauge);
+      recordData(d=>d.events.push({t:new Date().toISOString(),type:'vote',seg:segId,opt,dev:dev||''}));
       refreshAllLiveUI();
     });
     voteChannel.subscribe('pulseSync',msg=>{
@@ -965,12 +1012,17 @@ async function connectAbly(key){
       Object.keys(d).forEach(id=>{ votes[id]=votes[id]||{}; Object.entries(d[id]||{}).forEach(([k,n])=>{ if((votes[id][k]||0)<n){ votes[id][k]=n; changed=true; } }); });
       if(changed) refreshAllLiveUI();
     });
-    voteChannel.subscribe('snapshot',msg=>{ const snap=msg.data; if(snap){ votes=snap.votes||votes; gauges=snap.gauges||gauges; refreshAllLiveUI(); } });
+    voteChannel.subscribe('snapshot',msg=>{ const snap=msg.data; if(snap){ votes=snap.votes||votes; gauges=snap.gauges||gauges; recordData(()=>{}); refreshAllLiveUI(); } });
+    voteChannel.subscribe('promptScore',msg=>{
+      const {ts,dev,score,grade,dims}=msg.data||{}; if(!ts) return;
+      recordData(d=>{ const p=d.prompts.find(x=>x.ts===ts&&(x.dev||'')===(dev||'')); if(p){ p.score=score; p.grade=grade; p.dims=dims||[]; } });
+    });
     voteChannel.subscribe('prompt',msg=>{
       const entry=msg.data; if(!entry||!entry.sid||!entry.txt) return;
       const exists=S.prompts.some(p=>p.ts===entry.ts && p.txt===entry.txt);
       if(!exists){
         S.prompts.push(entry); save();
+        recordData(d=>{ if(!d.prompts.some(p=>p.ts===entry.ts&&p.txt===entry.txt)) d.prompts.push({sid:entry.sid,sl:entry.sl,txt:entry.txt,ts:entry.ts,dev:entry.dev||''}); });
         if($('facilitator').classList.contains('active')) renderSubs();
         if($('projector-screen').classList.contains('active') && DECK[S.idx] && DECK[S.idx].id===entry.sid) renderProjector();
       }
@@ -985,7 +1037,7 @@ async function connectAbly(key){
 }
 async function publishVote(segId,opt,gauge){
   if(!voteChannel){ votes[segId][opt]=(votes[segId][opt]||0)+1; applyGaugeDelta(gauge); refreshAllLiveUI(); return; }
-  try{ await voteChannel.publish('vote',{segId,opt,gauge}); }catch(e){ console.error(e); }
+  try{ await voteChannel.publish('vote',{segId,opt,gauge,dev:DEVICE_ID}); }catch(e){ console.error(e); }
 }
 async function broadcastSegment(idx){ _rendered={}; if(!stateChannel) return; try{ await stateChannel.publish('segment',{idx}); await stateChannel.publish('current',{idx}); }catch(e){} }
 async function broadcastReset(){
@@ -1194,7 +1246,7 @@ function loadPrompt(){
 async function submitPrompt(){
   const txt=$('prompt-ta').value.trim(); if(!txt){toast('TYPE AN ASSIGNMENT FIRST');return;}
   const seg=DECK[S.idx];
-  const entry={sid:seg.id,sl:seg.label,txt,ts:new Date().toISOString()};
+  const entry={sid:seg.id,sl:seg.label,txt,ts:new Date().toISOString(),dev:DEVICE_ID};
   S.prompts.push(entry); save();
   if(voteChannel){ try{ await voteChannel.publish('prompt',entry); }catch(e){} }
   $('btn-submit').disabled=true; $('prompt-ta').disabled=true;
@@ -1223,6 +1275,7 @@ async function submitPrompt(){
   const gColors={'EXCEPTIONAL':'#00e5ff','STRONG':'#10b981','ACCEPTABLE':'#f59e0b','NEEDS WORK':'#ef4444','CRITICAL FAILURE':'#dc2626'};
   const gClass={'EXCEPTIONAL':'fill-c','STRONG':'fill-green','ACCEPTABLE':'','NEEDS WORK':'fill-r','CRITICAL FAILURE':'fill-r'};
   const grade=evalData.grade||'ACCEPTABLE', gc=gColors[grade]||'#8bb8d4';
+  if(voteChannel){ try{ voteChannel.publish('promptScore',{ts:entry.ts,dev:entry.dev,score,grade,dims:(evalData.dimensions||[]).map(x=>({name:x.name,score:x.score}))}); }catch(e){} }
   $('eval-score').style.color=gc; $('eval-score').style.textShadow=`0 0 24px ${gc}80`;
   $('eval-grade-label').textContent=grade; $('eval-grade-label').style.color=gc;
   const bar=$('eval-score-bar'); bar.className='pg-fill '+(gClass[grade]||'fill-c'); setTimeout(()=>{bar.style.width=score+'%';},80);
@@ -1273,7 +1326,7 @@ function renderROS(){
     list.appendChild(div);
   });
 }
-function jumpTo(i){ S.idx=i; S.sel=null; save(); broadcastSegment(i); if(DECK[i] && DECK[i].type==='pulse-compare') sharePulseVotes(); renderFacilitator(); toast('LIVE: '+(DECK[i].label||DECK[i].title||'')); }
+function jumpTo(i){ S.idx=i; S.sel=null; save(); broadcastSegment(i); recordData(d=>d.events.push({t:new Date().toISOString(),type:'slide',seg:DECK[i].id})); if(DECK[i] && DECK[i].type==='pulse-compare') sharePulseVotes(); renderFacilitator(); toast('LIVE: '+(DECK[i].label||DECK[i].title||'')); }
 
 function renderFacPreview(){
   const seg=DECK[S.idx];
@@ -1414,6 +1467,77 @@ function renderPulseCompare(body,seg){
 // Pulse comparison needs the opening votes; merge counts so a refreshed tab doesn't show an empty "start" column.
 function sharePulseVotes(){ if(!voteChannel) return; const seg=DECK.find(d=>d.type==='pulse-compare'); if(!seg) return;
   try{ voteChannel.publish('pulseSync',{[seg.from]:votes[seg.from]||{},[seg.to]:votes[seg.to]||{}}); }catch(e){} }
+/* ── Reset the whole session (every device) ── */
+function resetEverythingLocal(){
+  DECK.forEach(d=>{ if(d.opts) votes[d.id]={}; });
+  gauges={inno:0,priv:0,acc:0,human:0,cnt:{inno:0,priv:0,acc:0,human:0}};
+  S.prompts=[]; S.sel=null; save();
+  policyResult=null; bonusContent={}; _rendered={}; _lastProjBarsFor=null;
+  if(IS_FACILITATOR){ SESSION_DATA=newSessionData(); try{ localStorage.setItem(DATA_KEY,JSON.stringify(SESSION_DATA)); }catch(e){} }
+  refreshAllLiveUI();
+  if(IS_FACILITATOR){ renderSubs(); renderDataPanel(); }
+}
+async function resetEntireSession(){
+  if(!confirm('Reset the ENTIRE session?\n\nThis clears every vote, the AI balance gauges, all audience assignments and scores, bonus dilemmas, the generated AI principles, and the session data saved on this laptop. Everyone returns to the title slide.\n\nDownload the session data first if you want to keep it.')) return;
+  resetEverythingLocal();
+  if(stateChannel){ try{ await stateChannel.publish('resetAll',{ts:Date.now()}); }catch(e){} }
+  if(voteChannel){ try{ await voteChannel.publish('snapshot',{votes,gauges}); }catch(e){} }
+  jumpTo(0);
+  toast('ENTIRE SESSION RESET');
+}
+
+/* ── Session data: summary + downloads ── */
+function csvCell(v){ v=(v===null||v===undefined)?'':String(v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function csv(rows){ return '﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'); }
+function downloadFile(name,text,type){ const b=new Blob([text],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500); }
+function stamp(){ const d=new Date(), z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}`; }
+function fmtLocal(iso){ try{ return new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'}); }catch(e){ return iso; } }
+function itemQuestion(seg){ return seg.type==='bonus-traffic' ? ((bonusContent[seg.id]?bonusContent[seg.id]+' — ':'')+(seg.q||'')) : (seg.q||seg.item||''); }
+function dataStats(){
+  const d=SESSION_DATA, devs=new Set();
+  d.events.forEach(e=>{ if(e.dev) devs.add(e.dev); }); d.prompts.forEach(p=>{ if(p.dev) devs.add(p.dev); });
+  const votesCast=DECK.reduce((a,x)=>a+(x.opts?totalVotes(x.id):0),0);
+  const scored=d.prompts.filter(p=>typeof p.score==='number');
+  const avg=scored.length?Math.round(scored.reduce((a,p)=>a+p.score,0)/scored.length):null;
+  return {participants:devs.size, votesCast, assignments:d.prompts.length, scored:scored.length, avg};
+}
+function renderDataPanel(){
+  if(!$('data-stats')) return;
+  const st=dataStats();
+  $('data-stats').innerHTML=[['Participants',st.participants],['Votes cast',st.votesCast],['Assignments',st.assignments],['Avg AI score',st.avg===null?'—':st.avg]]
+    .map(([l,v])=>`<div class="data-stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+  $('data-since').textContent='Recording since '+fmtLocal(SESSION_DATA.started);
+}
+function downloadResultsCSV(){
+  const rows=[['Order','Item','Type','Question','Option','Answer','Votes','Percent','Total votes on item']];
+  DECK.forEach((seg,i)=>{ if(!seg.opts) return; const t=totalVotes(seg.id);
+    seg.opts.forEach(o=>rows.push([i+1,seg.label||seg.title||seg.id,seg.type,itemQuestion(seg),o.id,o.txt,(votes[seg.id]&&votes[seg.id][o.id])||0,t?pct(seg.id,o.id)+'%':'',t])); });
+  rows.push([]); rows.push(['','AI balance gauges (simulation)','','','','','Value (0-100)']);
+  [['inno','Innovation'],['priv','Data Stewardship'],['acc','Reliability'],['human','Human Control']].forEach(([k,n])=>rows.push(['',n,'','','','',gaugeVal(k)]));
+  if(policyResult){ rows.push([]); rows.push(['',"Room's AI Principles (AI-generated)"]); policyResult.split('\n').filter(Boolean).forEach(l=>rows.push(['',l])); }
+  downloadFile(`ai-control-room_results_${stamp()}.csv`,csv(rows),'text/csv;charset=utf-8');
+}
+function downloadAssignmentsCSV(){
+  const rows=[['Time','Item','Assignment written by participant','AI score','Grade','Task','Context','Boundaries','Verification','Participant (anonymous)']];
+  SESSION_DATA.prompts.slice().sort((a,b)=>a.ts<b.ts?-1:1).forEach(p=>{ const dim=n=>{ const x=(p.dims||[]).find(d=>d.name===n); return x?x.score:''; };
+    rows.push([fmtLocal(p.ts),p.sl,p.txt,typeof p.score==='number'?p.score:'',p.grade||'',dim('Task'),dim('Context'),dim('Boundaries'),dim('Verification'),p.dev||'']); });
+  downloadFile(`ai-control-room_assignments_${stamp()}.csv`,csv(rows),'text/csv;charset=utf-8');
+}
+function downloadFullJSON(){
+  const out={
+    session:'NLC-RISC 2026 · AI Control Room — Leveraging AI Without Scaring Everyone',
+    exported:new Date().toISOString(), recordingStarted:SESSION_DATA.started, summary:dataStats(),
+    results:DECK.filter(s=>s.opts).map(s=>({id:s.id,item:s.label||s.title,type:s.type,question:itemQuestion(s),totalVotes:totalVotes(s.id),
+      options:s.opts.map(o=>({id:o.id,answer:o.txt,votes:(votes[s.id]&&votes[s.id][o.id])||0,percent:pct(s.id,o.id)}))})),
+    gauges:{innovation:gaugeVal('inno'),dataStewardship:gaugeVal('priv'),reliability:gaugeVal('acc'),humanControl:gaugeVal('human')},
+    roomPrinciples:policyResult||null,
+    assignments:SESSION_DATA.prompts,
+    slideTimeline:SESSION_DATA.events.filter(e=>e.type==='slide').map(e=>({time:e.t,item:(DECK.find(d=>d.id===e.seg)||{}).label||(DECK.find(d=>d.id===e.seg)||{}).title||e.seg})),
+    voteLog:SESSION_DATA.events.filter(e=>e.type==='vote')
+  };
+  downloadFile(`ai-control-room_full-data_${stamp()}.json`,JSON.stringify(out,null,2),'application/json');
+}
+
 function renderProjector(){
   const seg=DECK[S.idx]; if(!seg) return;
   $('proj-kicker').textContent = (seg.type==='slide'||seg.type==='pulse-compare') ? 'AI CONTROL ROOM' : (seg.kicker||seg.label||'AI CONTROL ROOM').toUpperCase();
@@ -1547,6 +1671,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('btn-fac-next').addEventListener('click',()=>jumpTo(Math.min(DECK.length-1,S.idx+1)));
   $('btn-fac-home').addEventListener('click',()=>showScreen('landing'));
   $('btn-fac-reset').addEventListener('click',()=>{ if(!confirm('Reset votes for this item?'))return; broadcastReset(); renderFacilitator(); toast('VOTES RESET'); });
+  $('btn-fac-reset-all').addEventListener('click',resetEntireSession);
+  $('btn-dl-results').addEventListener('click',downloadResultsCSV);
+  $('btn-dl-assign').addEventListener('click',downloadAssignmentsCSV);
+  $('btn-dl-json').addEventListener('click',downloadFullJSON);
   $('btn-refresh').addEventListener('click',()=>{ renderSubs(); toast('REFRESHED'); });
   $('btn-generate-policy').addEventListener('click',generatePolicy);
   $('btn-bonus-launch').addEventListener('click',launchBonusContent);
@@ -1591,7 +1719,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(IS_FACILITATOR || IS_PROJECTOR){ return; } // already in the right mode
     if(e.key.length!==1){ typed=''; return; }
     typed=(typed+e.key.toLowerCase()).slice(-SECRET.length);
-    if(typed===SECRET){ typed=''; if(TOKEN_AUTH && !FAC_CODE) return; IS_FACILITATOR=true; renderFacilitator(); showScreen('facilitator'); }
+    if(typed===SECRET){ typed=''; if(TOKEN_AUTH && !FAC_CODE) return; IS_FACILITATOR=true; restoreSessionData(); renderFacilitator(); renderDataPanel(); showScreen('facilitator'); }
   });
 });
 </script>
