@@ -9,6 +9,10 @@
       "destination": "/api/evaluate.js"
     },
     {
+      "source": "/api/ably-token",
+      "destination": "/api/ably-token.js"
+    },
+    {
       "source": "/handout",
       "destination": "/handout.html"
     }
