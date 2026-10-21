@@ -600,7 +600,7 @@ const DECK = [
  bullets:['Employees are already experimenting with AI tools on their own, whether or not there\'s a policy for it.'],
  columns:[{h:'96%',d:'of surveyed mayors are interested in using generative AI'},{h:'9%',d:'of local governments have a formal internal AI policy'},{h:'38%',d:'of local government tech leaders say their org isn\'t prepared to use AI safely'}],
  source:'Sources: Johns Hopkins / Bloomberg Center for Government Excellence (2023) · ICMA · Public Technology Institute (2024), via NLC',
- notes:{say:'This is why this conversation matters. Interest in AI is extremely high, but organizational readiness is not keeping pace. And while policies are still being discussed, employees are already experimenting with these tools.',ask:'Think about your own organization for a second. Do you know exactly which AI tools people are using today?',land:'The gap between adoption and governance is where most of the risk, confusion, and opportunity lives.'}},
+ notes:{say:'This is why this conversation matters. Interest in AI is extremely high, but organizational readiness is not keeping pace. And while policies are still being discussed, employees are already experimenting with these tools. A survey of small Pennsylvania municipalities this summer found most had no AI policy, and more than a quarter of staff were using personal ChatGPT accounts for work.',ask:'Think about your own organization for a second. Do you know exactly which AI tools people are using today?',land:'The gap between adoption and governance is where most of the risk, confusion, and opportunity lives.'}},
 
 {id:'wrong-question',type:'slide',min:1,kicker:'REFRAME',title:'"Should We Allow AI?" Is the Wrong Question',priority:'runiftime',
  bullets:['The better question: "How should we use it?"','AI is already entering our organizations — through employees, vendors, software, and public expectations.','A ban doesn\'t stop that. It just pushes it out of sight, into personal accounts and unapproved tools.'],
@@ -617,7 +617,7 @@ const DECK = [
  bullets:['Copilot, ChatGPT, and Claude each hand you a menu like this the moment you open them.'],
  imageRows:[['images/Models_0000_Co-Pilot-Models.png','images/Models_0001_Chat-GPT-Models.png'],['images/Models_0002_Claude-Models.png']],
  callout:'The logo tells you the brand. The menu tells you what you\'re actually getting.',
- notes:{say:'Point out that each platform now defaults to asking which model you want before you even start.',land:'This is exactly the Fast/Balanced/Deep idea from the last slide, made concrete.'}},
+ notes:{say:'Point out that each platform now defaults to asking which model you want before you even start.',land:'Hold onto that menu. The next slide simplifies it into three choices: Fast, Balanced, and Deep.'}},
 
 {id:'model-choices',type:'slide',min:1,kicker:'MODELS ARE NOT INTERCHANGEABLE',title:'⚡ Fast · 🧠 Balanced · 🔬 Deep',priority:'runiftime',
  bullets:['Every platform now offers more than one model — picking the right one is part of using AI responsibly.'],
@@ -626,8 +626,8 @@ const DECK = [
  notes:{say:'Most major AI platforms now give you choices. Some models are optimized for speed and routine work. Others spend more time reasoning through complex problems. That does not mean the biggest model should handle every task.',ask:'Would you use your most expensive, deepest reasoning model to rewrite a two-paragraph meeting announcement?',land:'Model selection should match the job, not our desire to always use the fanciest option.'}},
 
 {id:'pick-ai',type:'poll',min:2,label:'Pick The AI',setup:'The task: rewrite a 200-word community event announcement so it\'s easier for residents to understand. Nothing sensitive, nothing high-stakes.',q:'Which model would you choose for this job?',priority:'optional',
- opts:[{id:'A',txt:'⚡ FAST',g:{inno:2,acc:0}},{id:'B',txt:'🧠 BALANCED',g:{inno:1,acc:1}},{id:'C',txt:'🔬 DEEP',g:{acc:1,human:1}}],
- notes:{say:'Here is a very ordinary task. Nothing consequential, nothing complicated.',ask:'Which model would you choose to rewrite this event announcement?',reveal:'If FAST or BALANCED leads, affirm it. If DEEP wins, joke that we have brought heavy machinery to a very small construction project.',land:'More powerful does not automatically mean more appropriate.'}},
+ opts:[{id:'A',txt:'⚡ FAST — quick, routine work, lower cost',g:{inno:2,acc:0}},{id:'B',txt:'🧠 BALANCED — everyday professional work',g:{inno:1,acc:1}},{id:'C',txt:'🔬 DEEP — complex reasoning, slower, costs more',g:{acc:1,human:1}}],
+ notes:{say:'Here is a very ordinary task. Nothing consequential, nothing complicated. (If you skipped the Fast/Balanced/Deep slide, the option labels explain each tier, so this still works on its own.)',ask:'Which model would you choose to rewrite this event announcement?',reveal:'If FAST or BALANCED leads, affirm it. If DEEP wins, joke that we have brought heavy machinery to a very small construction project.',land:'More powerful does not automatically mean more appropriate.'}},
 
 {id:'sl-edges',type:'slide',min:2,kicker:'AI HAS EDGES',title:'Data · Accuracy · Decision · Accountability',priority:'must',
  bullets:['Four questions worth asking before any AI-assisted work leaves your desk.'],
@@ -641,7 +641,7 @@ const DECK = [
 {id:'confidence-accuracy',type:'slide',min:2,kicker:'A CRITICAL DISTINCTION',title:'AI Confidence ≠ AI Accuracy',priority:'runiftime',brief:'reveal',
  bullets:['It can be spectacularly helpful — and spectacularly wrong — with exactly the same confidence.','A polished, well-formatted answer is not the same thing as a correct one.'],
  callout:'The interface doesn\'t look nervous when it\'s guessing.',
- notes:{say:'Same summary. Seven problems. A project that is 112 percent complete. A budget that does not add up. A fifth quarter. A law that does not exist, a quote nobody said, a satisfaction score from three people, and a source from next year. And it was 99.2 percent confident the whole time.',ask:'How many did you catch before I circled them? How often do we trust something more simply because it looks professional?',land:'Presentation quality is not evidence of accuracy.'}},
+ notes:{say:'Same summary. Seven problems. A project that is 112 percent complete. A budget that does not add up. A fifth quarter. A law that does not exist, a quote nobody said, a satisfaction score from three people, and a source dated FY2029. And it was 99.2 percent confident the whole time.',ask:'How many did you catch before I circled them? How often do we trust something more simply because it looks professional?',land:'Presentation quality is not evidence of accuracy.'}},
 
 {id:'trust-check',type:'scenario',min:3,label:'Was AI\'s Answer Trustworthy?',priority:'must',
  setup:'An employee pastes the organization\'s full incident-reporting policy into AI and asks a simple question: "How quickly must an incident be reported?" The policy contains two sections that disagree. Section 4 says "within five business days." Section 8, added in a later revision, says "within 72 hours." AI answers confidently: "Employees must report incidents within five business days" — citing Section 4, with no mention of Section 8.',
@@ -743,7 +743,7 @@ const DECK = [
  setup:'A department head asks your communications team to let AI write a press release about a new city infrastructure grant. They send over a one-paragraph summary and tell you to make it a full release. The department head says they will approve it with a quick read.',
  q:'How should your team handle this request?',
  opts:[
-  {id:'A',txt:'Run the AI release as written after the department head approves it',out:'The release included a grant amount that the AI rounded incorrectly and a quote attributed to a state official that the official never said. The local paper ran a correction the next day. AI invented details that were not in the source material.',rsk:78,gInno:3},
+  {id:'A',txt:'Run the AI release as written after the department head approves it',out:'The release included a grant amount that the AI rounded incorrectly and a quote from the Mayor that the Mayor never said. The local paper ran a correction the next day. AI invented details that were not in the source material.',rsk:78,gInno:3},
   {id:'B',txt:'Use AI to draft the release but verify every specific fact against primary sources before sending',out:'The best outcome. AI produced a clean structure and professional language in minutes. A staff member verified the grant amount, confirmed the quote, and checked the program name. The release went out accurate and on time.',rsk:15,gInno:1},
   {id:'C',txt:'Decline to use AI for press releases because accuracy cannot be guaranteed',out:'SAFE, BUT HIGH-FRICTION. The release remained accurate, but the team gave up an opportunity to accelerate drafting while retaining human fact-checking. The risk could have been managed without removing AI entirely.',rsk:44,gInno:-5},
  ],
@@ -777,7 +777,7 @@ const DECK = [
  pFrame:{A:'You picked the thorough plan — solid instinct, wrong moment. A 22-minute review missed the 10-minute window entirely. Let\'s see if you can build an assignment that gets you something usable fast, without skipping the review step.',
   B:'You picked speed with a human check before posting — that\'s the balance that actually worked. Knowing that\'s the right call and getting AI to execute it well are different skills. Let\'s see if you can build the assignment that produces it.',
   C:'You picked pure speed with no review — that\'s exactly what let two inaccurate timelines go out unchecked. Let\'s see if you can build an assignment that keeps the speed but adds the guardrail that was missing.'},
- notes:{say:'Riscville has a major water main break. Residents have no water, the phones are blowing up, one person is on duty, and leadership wants something public in ten minutes.',ask:'What is the best use of AI right now?',reveal:'A is GOOD AI, WRONG JOB. B is RIGHT AI, RIGHT JOB. C is FAST AI, NO GUARDRAIL. Emphasize that all three involve capable AI. The workflow is what changes.',land:'The best AI is not always the deepest model. It is the right capability, used for the right job, with the right human check.'}},
+ notes:{say:'A major water main has broken in a residential neighborhood. Residents have no water, the phones are blowing up, one person is on duty, and leadership wants something public in ten minutes.',ask:'What is the best use of AI right now?',reveal:'A is GOOD AI, WRONG JOB. B is RIGHT AI, RIGHT JOB. C is FAST AI, NO GUARDRAIL. Emphasize that all three involve capable AI. The workflow is what changes.',land:'The best AI is not always the deepest model. It is the right capability, used for the right job, with the right human check.'}},
 
 {id:'verdict-water',type:'poll',min:1,label:'Would You Use It?',setup:'You\'ve now seen how the AI holding-statement workflow actually played out during the water main break.',q:'Would you use this workflow in your organization?',priority:'optional',
  opts:[{id:'A',txt:'✅ USE IT',g:{human:1}},{id:'B',txt:'✏️ REVIEW IT',g:{human:2}},{id:'C',txt:'🚫 DON\'T USE IT',g:{human:-1}}],
@@ -827,7 +827,7 @@ const DECK = [
  bullets:['AI can organize, summarize, compare, surface patterns','Humans still judge, approve, interpret, decide, and own the result','Give people: approved tools, clear boundaries, human accountability, permission to experiment','None of this requires you to be an AI expert — it requires you to be clear about where the line is'],
  source:'Session handout: link.omag.org/nlc-risc-handout',
  callout:'Good guardrails don\'t prevent experimentation. They make responsible experimentation possible.',
- notes:{say:'You do not have to become an AI expert to help your organization use AI responsibly. Know what tool you are using. Know where its edges are. Establish clear guardrails. Then give people room to experiment inside them.',ask:'As you go back to your organization, what is one AI boundary or decision that needs to become clearer?',reveal:'Point back to the resource QR and remind them that the frameworks and session materials are available there.',land:'Good guardrails do not prevent experimentation. They make responsible experimentation possible. Thank you.'}},
+ notes:{say:'You do not have to become an AI expert to help your organization use AI responsibly. Know what tool you are using. Know where its edges are. Establish clear guardrails. Then give people room to experiment inside them.',ask:'As you go back to your organization, what is one AI boundary or decision that needs to become clearer?',reveal:'Mention the handout link at the bottom of this slide. The QR code for it is on the next slide, so people can scan it during Q&A.',land:'Good guardrails do not prevent experimentation. They make responsible experimentation possible. Thank you.'}},
 
 {id:'thank-you',type:'slide',min:3,kicker:'THANK YOU',title:'Questions?',priority:'must',
  bullets:['Reach out anytime — happy to talk AI governance, guardrails, or how this session was built.'],
@@ -845,6 +845,10 @@ const SK='aicr1';
 const IS_PROJECTOR = new URLSearchParams(window.location.search).get('projector')==='true';
 let IS_FACILITATOR = false;
 let ABLY_KEY='';
+let TOKEN_AUTH=false; // true when the server has FACILITATOR_CODE set (locked-down mode)
+// Facilitator code: open the console as ?fac=CODE. Kept for this tab only, then stripped from the address bar.
+const FAC_CODE=(()=>{ let c=''; try{ const u=new URL(window.location.href); c=u.searchParams.get('fac')||sessionStorage.getItem('aicr-fac')||'';
+  if(u.searchParams.has('fac')){ sessionStorage.setItem('aicr-fac',c); u.searchParams.delete('fac'); history.replaceState(null,'',u.pathname+(u.search||'')+u.hash); } }catch(e){} return c; })();
 let SESSION_NAME='nlc-risc-2026';
 const dflt=()=>({idx:0,sel:null,prompts:[]});
 let S=dflt(); // always start fresh per device load — facilitator drives idx via broadcast
@@ -904,12 +908,14 @@ function updateConnUI(state){
   .forEach(id=>{ const el=$(id); if(el) el.innerHTML=connPill(state); });
 }
 async function connectAbly(key){
-  if(!key){ updateConnUI('disconnected'); return false; }
+  if(!key && !TOKEN_AUTH){ updateConnUI('disconnected'); return false; }
   if(ablyClient){ try{ablyClient.close();}catch(e){} ablyClient=null; voteChannel=null; stateChannel=null; }
   try{
     if(typeof Ably==='undefined'){ updateConnUI('disconnected'); return false; }
     updateConnUI('connecting');
-    ablyClient=new Ably.Realtime({key:key, clientId:'user-'+Math.random().toString(36).slice(2,8), closeOnUnload:true});
+    ablyClient=new Ably.Realtime(TOKEN_AUTH
+      ? {authUrl:'/api/ably-token', authParams: FAC_CODE?{code:FAC_CODE}:{}, closeOnUnload:true}
+      : {key:key, clientId:'user-'+Math.random().toString(36).slice(2,8), closeOnUnload:true});
     await new Promise((res,rej)=>{
       const onC=()=>{cleanup();res();}, onF=(sc)=>{cleanup();rej(new Error(sc.reason?.message||'failed'));}, onS=(sc)=>{cleanup();rej(new Error('suspended'));};
       const cleanup=()=>{ablyClient.connection.off('connected',onC);ablyClient.connection.off('failed',onF);ablyClient.connection.off('suspended',onS);};
@@ -920,7 +926,9 @@ async function connectAbly(key){
     voteChannel=ablyClient.channels.get(channelName('votes'));
     stateChannel=ablyClient.channels.get(channelName('state'));
 
-    stateChannel.subscribe('hello',msg=>{ if($('facilitator').classList.contains('active')) stateChannel.publish('current',{idx:S.idx}); });
+    const onHello=()=>{ if($('facilitator').classList.contains('active')) try{ stateChannel.publish('current',{idx:S.idx}); }catch(e){} };
+    stateChannel.subscribe('hello',onHello);   // older clients
+    voteChannel.subscribe('hello',onHello);    // late joiners ask "where are we?" here
     stateChannel.subscribe('segment',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number' && idx!==S.idx){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
     stateChannel.subscribe('current',msg=>{ const idx=msg.data?.idx; if(typeof idx==='number'){ S.idx=idx; S.sel=null; save(); onStateSynced(); } });
     stateChannel.subscribe('policyResult',msg=>{ policyResult=msg.data?.text||null; if($('projector-screen').classList.contains('active')) renderProjector(); if($('facilitator').classList.contains('active')) renderFacPreview(); });
@@ -955,7 +963,7 @@ async function connectAbly(key){
       }
     });
 
-    setTimeout(()=>{ stateChannel.publish('hello',{ts:Date.now()}); },1000);
+    setTimeout(()=>{ try{ voteChannel.publish('hello',{ts:Date.now()}); }catch(e){} },1000);
     ablyClient.connection.on('disconnected',()=>updateConnUI('connecting'));
     ablyClient.connection.on('suspended',()=>updateConnUI('disconnected'));
     ablyClient.connection.on('connected',()=>updateConnUI('connected'));
@@ -1351,7 +1359,7 @@ function briefHtml(reveal){
         <li>${e(5,'"Clean water is our quiet promise."')} — Public Works Director</li>
       </ul>
     </div>
-    <div class="br-foot">Sources: ${e(7,'City Infrastructure Report, FY2027')} · Generated in 11 seconds</div>
+    <div class="br-foot">Sources: ${e(7,'City Infrastructure Report, FY2029')} · Generated in 11 seconds</div>
   </div>`;
   if(!reveal) return `<div class="brief-wrap">${card}</div>`;
   return `<div class="brief-wrap rev">${card}<ol class="br-legend">${BRIEF_ERRORS.map((t,i)=>`<li><span class="n">${i+1}</span>${esc(t)}</li>`).join('')}</ol></div>`;
@@ -1504,11 +1512,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   startTicker(); updateConnUI('disconnected'); startPolling();
 
   (async()=>{
-    try{ const r=await fetch('/api/config'); if(r.ok){ const cfg=await r.json(); if(cfg.ablyKey) ABLY_KEY=cfg.ablyKey; } }catch(e){}
-    if(ABLY_KEY) connectAbly(ABLY_KEY); else updateConnUI('disconnected');
+    try{ const r=await fetch('/api/config'); if(r.ok){ const cfg=await r.json(); if(cfg.tokenAuth) TOKEN_AUTH=true; else if(cfg.ablyKey) ABLY_KEY=cfg.ablyKey; } }catch(e){}
+    // Projector link carries the facilitator code so arrow keys/clicker work on the projector tab too.
+    if(FAC_CODE){ const pl=$('btn-projector'); if(pl) pl.href='?projector=true&fac='+encodeURIComponent(FAC_CODE); }
+    if(ABLY_KEY || TOKEN_AUTH) connectAbly(ABLY_KEY); else updateConnUI('disconnected');
   })();
 
-  $('btn-connect').addEventListener('click',()=>{ onSegmentChanged(); if(stateChannel) stateChannel.publish('hello',{ts:Date.now()}); });
+  $('btn-connect').addEventListener('click',()=>{ onSegmentChanged(); if(voteChannel){ try{ voteChannel.publish('hello',{ts:Date.now()}); }catch(e){} } });
   $('btn-sc-back').addEventListener('click',()=>showScreen('landing'));
   $('btn-watch-back').addEventListener('click',()=>showScreen('landing'));
   $('btn-reveal').addEventListener('click',revealCons);
@@ -1568,7 +1578,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(IS_FACILITATOR || IS_PROJECTOR){ return; } // already in the right mode
     if(e.key.length!==1){ typed=''; return; }
     typed=(typed+e.key.toLowerCase()).slice(-SECRET.length);
-    if(typed===SECRET){ typed=''; IS_FACILITATOR=true; renderFacilitator(); showScreen('facilitator'); }
+    if(typed===SECRET){ typed=''; if(TOKEN_AUTH && !FAC_CODE) return; IS_FACILITATOR=true; renderFacilitator(); showScreen('facilitator'); }
   });
 });
 </script>
