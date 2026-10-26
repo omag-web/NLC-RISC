@@ -82,7 +82,7 @@ The three "Give AI The Job" writing exercises usually run long, so watch the clo
 | 27 | Mission 1 · The Press Release | scenario | MUST | 6 |
 | 28 | Would You Use It? | poll | Optional | 1 |
 | 29 | ⚡ Fast vs. 🧠 Deep — Under Time Pressure | slide | If time | 1 |
-| 30 | Mission 2 · The Water Main Break | scenario | MUST | 6 |
+| 30 | Mission 2 · The Storm Hits Your Members | scenario | MUST | 6 |
 | 31 | Would You Use It? | poll | Optional | 1 |
 | 32 | Six Questions Your Organization Must Answer | slide | If time | 1 |
 | 33 | Let's Build YOUR AI Policy | slide | If time | 1 |
