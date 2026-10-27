@@ -354,7 +354,6 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
 
 <!-- ═══ AUDIENCE SEGMENT SCREEN (handles scenario / traffic / poll / policy-question) ═══ -->
 <div class="screen" id="segment" style="gap:1.05rem;">
-  <button class="nav-back" id="btn-sc-back">← Back to Console</button>
   <div class="between w">
     <div class="col" style="gap:.18rem;">
       <span class="mono cyan" style="font-size:.65rem;letter-spacing:.2em;" id="sc-label">—</span>
@@ -395,7 +394,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     </div>
     <div class="rev3" style="width:100%;">
       <button class="btn btn-p btn-full" id="btn-to-prompt">Give AI The Job →</button>
-      <button class="btn btn-o btn-full" id="btn-done-noprompt" style="margin-top:.6rem;">✓ Done — Back to Console</button>
+      <button class="btn btn-o btn-full" id="btn-done-noprompt" style="margin-top:.6rem;">✓ Done</button>
     </div>
   </div>
   <div class="ticker w" id="tick1" style="padding-bottom:.4rem;"></div>
@@ -408,7 +407,6 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <div class="disp cyan" style="font-size:.85rem;letter-spacing:.15em;">LOOK AT THE MAIN SCREEN</div>
     <div class="mono muted" style="font-size:.7rem;" id="watch-note">Your next mission is coming up.</div>
     <div id="conn-status-watch"></div>
-    <button class="nav-back" id="btn-watch-back" style="margin-top:1rem;">← Back to Console</button>
   </div>
 </div>
 
@@ -447,7 +445,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
     <div class="disp green-c" style="font-size:.9rem;letter-spacing:.1em;">SENT TO THE FACILITATOR</div>
     <div class="mono muted" style="font-size:.7rem;">Thanks — we may run yours live in a minute.</div>
-    <button class="btn btn-o" id="btn-collect-back" style="margin-top:.5rem;">← Back to Console</button>
+    <button class="btn btn-o" id="btn-collect-back" style="margin-top:.5rem;">✓ Done</button>
   </div>
   <div id="eval-panel" style="display:none;flex-direction:column;gap:.9rem;width:100%;">
     <div id="eval-analyzing" style="display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1.5rem;">
@@ -476,7 +474,7 @@ body::before{content:'';position:fixed;top:-5%;left:0;width:100%;height:2px;back
       </div>
       <div class="panel" style="background:var(--bg-card);"><div class="slabel">SYSTEM FEEDBACK</div><p style="font-size:.92rem;color:var(--text2);line-height:1.78;" id="eval-feedback"></p></div>
       <div class="panel" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.2);"><div style="font-family:var(--mono);font-size:.6rem;color:var(--amber);letter-spacing:.15em;margin-bottom:.55rem;">HOW TO STRENGTHEN IT</div><p style="font-size:.9rem;color:var(--text2);line-height:1.75;" id="eval-improve"></p></div>
-      <button class="btn btn-o btn-full" id="btn-back-console2">⌂ Return to Main Console</button>
+      <button class="btn btn-o btn-full" id="btn-back-console2">✓ Done</button>
     </div>
   </div>
   <div class="ticker w" id="tick2" style="padding-bottom:.4rem;"></div>
@@ -1684,8 +1682,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   })();
 
   $('btn-connect').addEventListener('click',()=>{ onSegmentChanged(); if(voteChannel){ try{ voteChannel.publish('hello',{ts:Date.now()}); }catch(e){} } });
-  $('btn-sc-back').addEventListener('click',()=>showScreen('landing'));
-  $('btn-watch-back').addEventListener('click',()=>showScreen('landing'));
   $('btn-reveal').addEventListener('click',revealCons);
   $('btn-reset').addEventListener('click',()=>{ S.sel=null; save(); loadSegment(S.idx); });
   $('btn-to-prompt').addEventListener('click',()=>{ loadPrompt(); showScreen('prompt-screen'); });
