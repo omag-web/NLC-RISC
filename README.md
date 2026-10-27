@@ -35,13 +35,13 @@ Keep the projector tab open from the start. The "How the Room Changed" slide com
 |---|---|
 | MUST only | ~55 |
 | MUST + If time | ~66 |
-| Everything | ~82 |
+| Everything | ~83 |
 
 For a 60-minute slot, run MUST items and treat "If time" items as flex. Skip all Optional items unless you're ahead.
 The three "Give AI The Job" writing exercises usually run long, so watch the clock during Missions 1 and 2.
 
 **Cut order if running long (first to go → last):**
-1. Optional: Pick The AI, HR Traffic Control round, Bonus rounds, both "Would You Use It?" polls, How Did We Balance AI?
+1. Optional: Pick The AI, HR Traffic Control round, Bonus rounds, both "Would You Use It?" polls, Policy Question 5, How Did We Balance AI?
 2. Every Platform, Multiple Models (screenshots)
 3. "Should We Allow AI?" Is the Wrong Question
 4. "I Don't Have Enough Information"
@@ -69,7 +69,7 @@ The three "Give AI The Job" writing exercises usually run long, so watch the clo
 | 14 | Green · Yellow · Red | slide | MUST | 3 |
 | 15 | Welcome to the City of Riscville | slide | MUST | 1 |
 | 16 | Riscville Traffic Control — Communications | traffic | MUST | 2 |
-| 17 | Riscville Traffic Control — HR (optional, skip if short on time) | traffic | Optional | 2 |
+| 17 | Riscville Traffic Control — HR | traffic | Optional | 2 |
 | 18 | Riscville Traffic Control — A Supervisor | traffic | MUST | 2 |
 | 19 | Riscville Traffic Control — Risk Management | traffic | MUST | 2 |
 | 20 | Guardrail Triggered · The HR Complaint | scenario | MUST | 5 |
@@ -90,13 +90,14 @@ The three "Give AI The Job" writing exercises usually run long, so watch the clo
 | 35 | Policy Question 2/4 | policy | MUST | 1 |
 | 36 | Policy Question 3/4 | policy | MUST | 1 |
 | 37 | Policy Question 4/4 | policy | MUST | 1 |
-| 38 | Your Room's AI Principles | policy-reveal | MUST | 3 |
-| 39 | How Did We Balance AI? | health-reveal | Optional | 2 |
-| 40 | Final Pulse Check | poll | MUST | 1 |
-| 41 | How the Room Changed | pulse-compare | MUST | 1 |
-| 42 | Final Pulse Check — Readiness | poll | MUST | 1 |
-| 43 | Know the Tool. Know the Edges. Build the Guardrails. | slide | MUST | 1 |
-| 44 | Questions? | slide | MUST | 3 |
+| 38 | Policy Question 5 · Bonus | policy | Optional | 1 |
+| 39 | Your Room's AI Principles | policy-reveal | MUST | 3 |
+| 40 | How Did We Balance AI? | health-reveal | Optional | 2 |
+| 41 | Final Pulse Check | poll | MUST | 1 |
+| 42 | How the Room Changed | pulse-compare | MUST | 1 |
+| 43 | Final Pulse Check — Readiness | poll | MUST | 1 |
+| 44 | Know the Tool. Know the Edges. Build the Guardrails. | slide | MUST | 1 |
+| 45 | Questions? | slide | MUST | 3 |
 
 ## Setup (Vercel environment variables)
 

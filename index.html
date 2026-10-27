@@ -708,7 +708,7 @@ const DECK = [
  opts:[{id:'A',txt:'🟢 GREEN — normal work'},{id:'B',txt:'🟡 YELLOW — slow down, add safeguards'},{id:'C',txt:'🔴 RED — stop or reframe'}],
  notes:{say:'Riscville Communications calls first. They want AI to turn your published winter-driving loss-control bulletin into plain-language tips for their employee newsletter.',ask:'Green, Yellow, or Red?',reveal:'Recommended GREEN. The source is already public, the consequence is low, the value is clear, and a human can easily check it against the original bulletin.',land:'If low-risk work requires a three-day approval process, people will simply stop following the process.'}},
 
-{id:'tc2',type:'traffic',min:2,label:'Riscville Traffic Control — HR (optional, skip if short on time)',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'optional',
+{id:'tc2',type:'traffic',min:2,label:'Riscville Traffic Control — HR',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'optional',
  item:'Riscville\'s HR director heard about it and wants in too — they want AI to create five interview questions using the publicly posted job description.',correct:0,
  q:'Should Riscville give this a Green, Yellow, or Red light?',
  opts:[{id:'A',txt:'🟢 GREEN — normal work'},{id:'B',txt:'🟡 YELLOW — slow down, add safeguards'},{id:'C',txt:'🔴 RED — stop or reframe'}],
@@ -823,8 +823,8 @@ const DECK = [
  notes:{say:'Everything so far has been individual judgment calls. Now zoom out to the organization. If you are building AI policy, do not start by asking someone to draft the document. Start by answering these six questions together.',ask:'Which one of these would create the most disagreement in your organization today?',reveal:'Move through the six questions quickly. Do not over-explain each one.',land:'A policy cannot clarify decisions leadership has never actually made. So let\'s make a few of them right now.'}},
 
 {id:'sl-policy',type:'slide',min:1,kicker:'BUILD IT TOGETHER',title:'Let\'s Build YOUR AI Policy',priority:'runiftime',
- bullets:['Your answers to the next four questions become the room\'s principles','No right answers — just decisions','Reasonable organizations land in different places on these, and that\'s fine'],
- notes:{say:'You have spent the last forty-something minutes making AI governance decisions without calling them policy decisions. Now I want to turn those instincts into something concrete.',ask:'You are going to answer four questions. The room\'s answers will become the principles we generate at the end.',land:'We are not looking for universal rules. We are trying to make organizational choices explicit.'}},
+ bullets:['Your answers to the next few questions become the room\'s principles','No right answers — just decisions','Reasonable organizations land in different places on these, and that\'s fine'],
+ notes:{say:'You have spent the last forty-something minutes making AI governance decisions without calling them policy decisions. Now I want to turn those instincts into something concrete.',ask:'You are going to answer a few quick questions. The room\'s answers will become the principles we generate at the end.',land:'We are not looking for universal rules. We are trying to make organizational choices explicit.'}},
 
 {id:'pq1',type:'policy',min:1,label:'Policy Question 1/4',setup:'Our AI policy · Question 1 of 4',q:'Should employees be limited to organization-approved AI tools?',priority:'must',
  opts:[{id:'A',txt:'Yes — approved tools only'},{id:'B',txt:'Approved tools for work data; anything for brainstorming'},{id:'C',txt:'No restriction — employee judgment'}],
@@ -838,6 +838,10 @@ const DECK = [
 {id:'pq4',type:'policy',min:1,label:'Policy Question 4/4',setup:'Our AI policy · Question 4 of 4',q:'Does using AI transfer accountability away from the employee who used it?',priority:'must',
  opts:[{id:'A',txt:'Yes'},{id:'B',txt:'No'}],
  notes:{say:'Last one, and I suspect this room may be fairly united on it.',ask:'Does using AI transfer accountability away from the employee who used it?',reveal:'Let the result sit. If NO dominates, say: "There is our anchor."',land:'AI can assist the work. It does not absorb responsibility for the work.'}},
+
+{id:'pq5',type:'policy',min:1,label:'Policy Question 5 · Bonus',setup:'Our AI policy · Bonus question',q:'Should members be told when AI helped create something they receive from the pool?',priority:'optional',
+ opts:[{id:'A',txt:'Always disclose'},{id:'B',txt:'Only for significant content — coverage letters, claims communications, legal guidance'},{id:'C',txt:'No, as long as a human reviewed it'}],
+ notes:{say:'One bonus question, and this one is especially yours as a pool. Your members trust what you send them.',ask:'Should members be told when AI helped create something they receive from the pool?',reveal:'Expect a split, and use it. Point back to Mission 2: when AI answered coverage questions on its own, it made promises nobody approved. Disclosure is about trust, but it does not replace human review.',land:'Transparency is part of accountability. If AI helped write it, someone still has to own it.'}},
 
 {id:'policy-reveal',type:'policy-reveal',min:3,label:'Your Room\'s AI Principles',priority:'must',
  notes:{say:'You just gave us four governance decisions. Now we are going to let AI do something it is actually very good at: synthesize those decisions into a usable first draft.',ask:'As these principles generate, look for where the room had consensus and where the wording reflects tension.',reveal:'Click "Generate Room\'s AI Principles" in the panel below once all 4 policy votes are in. Read only the strongest 2 or 3 principles aloud, not every line.',land:'The generated document is not the policy. The value is that the room had the conversations required before a policy can mean anything.'}},
@@ -1291,7 +1295,7 @@ async function submitPrompt(){
    POLICY GENERATION
    ══════════════════════════════════════════════════════════════ */
 async function generatePolicy(){
-  const qIds=['pq1','pq2','pq3','pq4'];
+  const qIds=['pq1','pq2','pq3','pq4'].concat(totalVotes('pq5')>0?['pq5']:[]); // pq5 is optional; include it only if it was run
   const tallies=qIds.map(id=>{
     const seg=DECK.find(d=>d.id===id); const v=votes[id]||{};
     const lines=seg.opts.map(o=>`  ${o.id}) "${o.txt}" — ${v[o.id]||0} votes`).join('\n');
