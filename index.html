@@ -659,7 +659,7 @@ const DECK = [
  callout:'The best model is the one appropriate for the task.',
  notes:{say:'Most major AI platforms now give you choices. Some models are optimized for speed and routine work. Others spend more time reasoning through complex problems. That does not mean the biggest model should handle every task.',ask:'Would you use your most expensive, deepest reasoning model to rewrite a two-paragraph meeting announcement?',land:'Model selection should match the job, not our desire to always use the fanciest option.'}},
 
-{id:'pick-ai',type:'poll',min:2,label:'Pick The AI',setup:'The task: rewrite a 200-word community event announcement so it\'s easier for residents to understand. Nothing sensitive, nothing high-stakes.',q:'Which model would you choose for this job?',priority:'optional',
+{id:'pick-ai',type:'poll',min:2,label:'Pick The AI',setup:'The task: rewrite a 200-word announcement for an upcoming member training webinar so it\'s easier to read. Nothing sensitive, nothing high-stakes.',q:'Which model would you choose for this job?',priority:'optional',
  opts:[{id:'A',txt:'⚡ FAST — quick, routine work, lower cost',g:{inno:2,acc:0}},{id:'B',txt:'🧠 BALANCED — everyday professional work',g:{inno:1,acc:1}},{id:'C',txt:'🔬 DEEP — complex reasoning, slower, costs more',g:{acc:1,human:1}}],
  notes:{say:'Here is a very ordinary task. Nothing consequential, nothing complicated. (If you skipped the Fast/Balanced/Deep slide, the option labels explain each tier, so this still works on its own.)',ask:'Which model would you choose to rewrite this event announcement?',reveal:'If FAST or BALANCED leads, affirm it. If DEEP wins, joke that we have brought heavy machinery to a very small construction project.',land:'More powerful does not automatically mean more appropriate.'}},
 
@@ -704,25 +704,25 @@ const DECK = [
 
 {id:'tc1',type:'traffic',min:2,label:'Riscville Traffic Control — Communications',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
  item:'Riscville\'s Communications team calls first: they want to use AI to turn your pool\'s published winter-driving loss-control bulletin into short, plain-language safety tips for their employee newsletter.',correct:0,
- q:'Should Riscville give this a Green, Yellow, or Red light?',
+ q:'What light would you give Riscville on this one?',
  opts:[{id:'A',txt:'🟢 GREEN — normal work'},{id:'B',txt:'🟡 YELLOW — slow down, add safeguards'},{id:'C',txt:'🔴 RED — stop or reframe'}],
  notes:{say:'Riscville Communications calls first. They want AI to turn your published winter-driving loss-control bulletin into plain-language tips for their employee newsletter.',ask:'Green, Yellow, or Red?',reveal:'Recommended GREEN. The source is already public, the consequence is low, the value is clear, and a human can easily check it against the original bulletin.',land:'If low-risk work requires a three-day approval process, people will simply stop following the process.'}},
 
 {id:'tc2',type:'traffic',min:2,label:'Riscville Traffic Control — HR',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'optional',
  item:'Riscville\'s HR director heard about it and wants in too — they want AI to create five interview questions using the publicly posted job description.',correct:0,
- q:'Should Riscville give this a Green, Yellow, or Red light?',
+ q:'What light would you give Riscville on this one?',
  opts:[{id:'A',txt:'🟢 GREEN — normal work'},{id:'B',txt:'🟡 YELLOW — slow down, add safeguards'},{id:'C',txt:'🔴 RED — stop or reframe'}],
  notes:{say:'Riscville HR heard about it and wants in. They want AI to generate interview questions from a publicly posted job description.',ask:'Green, Yellow, or Red?',reveal:'Recommended GREEN or light YELLOW. You may want review for fairness or consistency, but there is no universal answer here.',land:'Good governance does not require every organization to draw every line in exactly the same place. Cut this round first if you\'re running long.'}},
 
 {id:'tc3',type:'traffic',min:2,label:'Riscville Traffic Control — A Supervisor',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
  item:'Word is spreading fast. A supervisor decides to try it on their own — they paste an employee\'s medical documentation into their personal AI account and ask for a summary.',correct:2,
- q:'Should Riscville give this a Green, Yellow, or Red light?',
+ q:'What light would you give Riscville on this one?',
  opts:[{id:'A',txt:'🟢 GREEN — normal work'},{id:'B',txt:'🟡 YELLOW — slow down, add safeguards'},{id:'C',txt:'🔴 RED — stop or reframe'}],
  notes:{say:'Now word is spreading. A supervisor skips the approved tools entirely and pastes an employee\'s medical documentation into a personal AI account for a quick summary.',ask:'Green, Yellow, or Red?',reveal:'Recommended RED. Not because summarization is inherently dangerous, but because we have sensitive information going into an unapproved environment.',land:'The question is rarely just "Is AI allowed?" It is data plus environment plus purpose.'}},
 
 {id:'tc4',type:'traffic',min:2,label:'Riscville Traffic Control — Risk Management',kicker:'CITY OF RISCVILLE // AI CONTROL ROOM',priority:'must',
  item:'Meanwhile, Risk Management has been sitting on 5,000 incident records they\'ve never had time to fully analyze. An approved enterprise AI system analyzes the anonymized descriptions to identify recurring trends for human review.',correct:1,
- q:'Should Riscville give this a Green, Yellow, or Red light?',
+ q:'What light would you give Riscville on this one?',
  opts:[{id:'A',txt:'🟢 GREEN — normal work'},{id:'B',txt:'🟡 YELLOW — slow down, add safeguards'},{id:'C',txt:'🔴 RED — stop or reframe'}],
  notes:{say:'Meanwhile, Risk Management has something very different. Five thousand anonymized incident descriptions are sitting there with patterns nobody has had time to examine.',ask:'Green, Yellow, or Red?',reveal:'Recommended YELLOW. There is real value here, but the environment, anonymization, methodology, and human interpretation all matter.',land:'Yellow does not mean no. Yellow means slow down enough to use the tool responsibly.'}},
 
@@ -1302,7 +1302,7 @@ async function generatePolicy(){
     return `Q: ${seg.q}\n${lines}`;
   }).join('\n\n');
   toast('GENERATING PRINCIPLES...');
-  const sysP=`You are drafting a short "Responsible AI Principles" document for a room of public-sector professionals at the NLC-RISC conference, based on their live votes during a session on AI governance. Do not simply restate the majority answer for each question as a principle — synthesize genuine guidance.\n\nFor each question, identify the room's lean AND how close the vote was. If a vote was closer than roughly 65/35, name that tension explicitly as something this specific organization still needs to talk through, rather than presenting false consensus.\n\nWhere it fits naturally, connect a principle to language already used in this session: the Green/Yellow/Red framework (use freely / use carefully / stop or reframe), or the Four-Question Guardrail (Data — what am I giving it; Decision — what am I asking it to do; Environment — where is it going; Double-Check — what must a human verify).\n\nWrite 6-8 short, plain-language principles. At least 2 of them should go beyond a flat restatement of the vote by adding one sentence of practical guidance or a boundary case. Respond ONLY with a JSON object: {"title":"<short title>","principles":["<principle 1>","<principle 2>", ...]}`;
+  const sysP=`You are drafting a short "Responsible AI Principles" document for a room of public entity risk pool staff at the NLC-RISC Staff Conference (pools that insure and advise member cities), based on their live votes during a session on AI governance. Do not simply restate the majority answer for each question as a principle — synthesize genuine guidance.\n\nFor each question, identify the room's lean AND how close the vote was. If a vote was closer than roughly 65/35, name that tension explicitly as something this specific organization still needs to talk through, rather than presenting false consensus.\n\nWhere it fits naturally, connect a principle to language already used in this session: the Green/Yellow/Red framework (use freely / use carefully / stop or reframe), or the Four-Question Guardrail (Data — what am I giving it; Decision — what am I asking it to do; Environment — where is it going; Double-Check — what must a human verify).\n\nWrite 6-8 short, plain-language principles. At least 2 of them should go beyond a flat restatement of the vote by adding one sentence of practical guidance or a boundary case. Respond ONLY with a JSON object: {"title":"<short title>","principles":["<principle 1>","<principle 2>", ...]}`;
   try{
     const resp=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemPrompt:sysP,userPrompt:tallies})});
     const data=await resp.json(); const raw=data.content?.[0]?.text||''; const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
@@ -1582,7 +1582,7 @@ function renderProjector(){
     if(seg.brief){
       html+=briefHtml(seg.brief==='reveal');
       if(seg.callout){ html+=`<div class="slide-callout">${esc(seg.callout)}</div>`; }
-      body.innerHTML=html; body.style.justifyContent='flex-start'; return;
+      body.innerHTML=html; body.style.justifyContent='flex-start'; requestAnimationFrame(fitProjector); return;
     }
     if(seg.columns){ html+=`<div class="slide-cols">${seg.columns.map(c=>`<div class="slide-col"><h3>${esc(c.h)}</h3><p>${esc(c.d)}</p></div>`).join('')}</div>`; }
     if(seg.bullets){ html+=`<ul class="slide-bullets">${seg.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`; }
@@ -1651,12 +1651,30 @@ function renderProjector(){
     const count=S.prompts.filter(p=>p.sid===seg.id).length;
     body.innerHTML=`<div class="proj-input-badge">📱 Submit your real AI dilemma now</div><div class="proj-q" style="text-align:center;">What's a real gray area from your own job?</div><div style="font-family:var(--disp);font-size:2.4rem;font-weight:900;color:var(--cyan);text-align:center;">${count}</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--textm);letter-spacing:.12em;text-align:center;text-transform:uppercase;">submitted so far</div>`;
   }
+  requestAnimationFrame(fitProjector);
 }
+
 function toggleFullscreen(){
   if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); }
   else{ document.exitFullscreen(); }
 }
-function showProjector(){ renderProjector(); showScreen('projector-screen'); }
+function showProjector(){ showScreen('projector-screen'); renderProjector(); }
+/* ── Fit the projector view to any resolution (720p, 768p, scaled laptops) ──
+   Designed at 1080p; if a screen's content is taller than the window, shrink it just enough to fit. */
+let _fitIdx=null;
+function fitProjector(){
+  const el=$('projector-screen'); if(!el || !el.classList.contains('active')) return;
+  if(_fitIdx!==S.idx){ el.style.zoom=''; _fitIdx=S.idx; }
+  let z=parseFloat(el.style.zoom)||1;
+  for(let k=0;k<4;k++){
+    const sh=document.documentElement.scrollHeight, ch=window.innerHeight;
+    if(sh<=ch+1) break;
+    z=Math.max(0.5, z*(ch/sh)*0.995); el.style.zoom=z;
+  }
+}
+window.addEventListener('resize',()=>{ _fitIdx=null; fitProjector(); });
+// Refit when content changes size after render (e.g. screenshots finish loading).
+document.addEventListener('DOMContentLoaded',()=>{ const pb=$('proj-body'); if(pb && 'ResizeObserver' in window) new ResizeObserver(()=>fitProjector()).observe(pb); });
 
 /* ══════════════════════════════════════════════════════════════
    POLLING (keeps totals/gauges fresh even without new votes)
